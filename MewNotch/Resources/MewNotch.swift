@@ -190,5 +190,9 @@ class MewNotch {
         /// 非致命关切的小圆点。
         static let concernAmber = Color(red: 1.00, green: 0.69, blue: 0.13)
         static let concernGray = Color.white.opacity(0.35)
+
+        /// 进度环走空后剩下的暗色轨道。够暗以免在余光里形成第二个亮环，
+        /// 又够亮让「已消耗」的部分可辨。
+        static let ringTrack = Color.white.opacity(0.16)
     }
 }

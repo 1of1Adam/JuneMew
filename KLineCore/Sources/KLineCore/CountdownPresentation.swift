@@ -102,6 +102,20 @@ public struct Countdown: Equatable, Sendable {
         self.phase = phase
         self.concerns = concerns
     }
+
+    /// 当前 K 线的剩余比例，值域 `0...1`（消耗式进度环用它做 trim）。
+    ///
+    /// 分母用**这根 K 线的实际长度**（`barCloses - barOpens`），不是名义周期 ——
+    /// 4h 的末根或提前收盘会被截断，用名义周期算会让环在收线前提早走空。
+    ///
+    /// `remainingSeconds` 是 ceil 语义（值域 `1...length`，见 BarClock），
+    /// 所以这里恒为正、在开盘瞬间约等于 1、收线前一秒约等于 `1/length`，
+    /// 永不为 0 —— 与「倒计时永不显示 00:00」一致。
+    public var fractionRemaining: Double {
+        let length = barCloses.timeIntervalSince(barOpens)
+        guard length > 0 else { return 0 }
+        return min(1, max(0, Double(remainingSeconds) / length))
+    }
 }
 
 /// 引擎对外发布的唯一状态。
