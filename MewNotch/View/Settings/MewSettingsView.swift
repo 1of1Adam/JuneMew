@@ -39,6 +39,11 @@ struct MewSettingsView: View {
                                 SettingsSidebarRow(title: "Notch", icon: MewNotch.Assets.icNotch, color: MewNotch.Colors.notch)
                             }
                             .id(SettingsPages.Notch)
+
+                            NavigationLink(destination: CountdownSettingsView()) {
+                                SettingsSidebarRow(title: "Countdown", icon: MewNotch.Assets.icCandle, color: MewNotch.Colors.countdown)
+                            }
+                            .id(SettingsPages.Countdown)
                         }
                             
 

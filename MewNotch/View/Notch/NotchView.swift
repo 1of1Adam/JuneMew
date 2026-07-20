@@ -10,6 +10,7 @@ import SwiftUI
 struct NotchView: View {
 
     @StateObject var notchDefaults = NotchDefaults.shared
+    @StateObject var countdownDefaults = CountdownDefaults.shared
 
     @StateObject var notchViewModel: NotchViewModel
 
@@ -31,9 +32,23 @@ struct NotchView: View {
                 HStack(
                     spacing: 0
                 ) {
+                    if countdownDefaults.position == .left {
+                        CountdownView(
+                            notchViewModel: notchViewModel,
+                            variant: .left
+                        )
+                    }
+
                     OnlyNotchView(
                         notchSize: notchViewModel.notchSize
                     )
+
+                    if countdownDefaults.position == .right {
+                        CountdownView(
+                            notchViewModel: notchViewModel,
+                            variant: .right
+                        )
+                    }
                 }
                 .glassEffect(when: notchDefaults.applyGlassEffect, in: NotchShape(
                     topRadius: notchViewModel.cornerRadius.top,

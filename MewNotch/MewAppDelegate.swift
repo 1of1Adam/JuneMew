@@ -39,7 +39,9 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
         NotchManager.shared.refreshNotches(
             addToSeparateSpace: false
         )
-        
+
+        CountdownEngine.shared.start()
+
         NSApp.setActivationPolicy(.accessory)
     }
     

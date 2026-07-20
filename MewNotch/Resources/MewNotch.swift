@@ -86,6 +86,16 @@ class MewNotch {
         static let icStatusIcon = Image(systemName: "menubar.rectangle")
         static let icDisableSystemHud = Image(systemName: "eye.slash.fill")
         static let icWarning = Image(systemName: "exclamationmark.triangle.fill")
+
+        // Countdown
+        static let icCandle = Image(systemName: "chart.bar.xaxis")
+        static let icBell = Image(systemName: "bell.fill")
+        static let icPosition = Image(systemName: "arrow.left.and.right")
+        static let icMoon = Image(systemName: "moon.zzz.fill")
+        static let icLabel = Image(systemName: "textformat")
+        static let icClockCheck = Image(systemName: "clock.badge.checkmark")
+        static let icCalendar = Image(systemName: "calendar")
+        static let icGlobe = Image(systemName: "globe.americas.fill")
     }
     
     class Colors {
@@ -122,6 +132,46 @@ class MewNotch {
         static let autoBrightness = IconColor.green
         static let systemHud = IconColor.red
         static let video = IconColor.purple
+
+        static let countdown = IconColor.orange
+        static let alert = IconColor.red
+        static let session = IconColor.indigo
+        static let diagnostics = IconColor.gray
     }
-    
+
+    /// 刘海上倒计时的相位配色。背景是纯黑，且 app 强制深色模式。
+    ///
+    /// 核心原则：**余光（周边视觉）基本是色盲的** —— 它对亮度和运动敏感、
+    /// 对色相不敏感。所以紧迫度主要编码在亮度和辉光里，色相只是中央凹的
+    /// 二次线索。这顺带解决了色盲友好问题：亮度阶梯对所有 CVD 类型都有效，
+    /// 不需要专门做红绿处理。
+    class CountdownColors {
+
+        /// 比菜单栏时钟低半档 —— 没事的时候自然后退。
+        /// 不用绿色：一是把整个方案架在红绿轴（最差的 CVD 轴）上，
+        /// 二是常驻绿字会产生适应疲劳，等真变色时反差反而不够。
+        static let normal = Color.white.opacity(0.72)
+
+        /// 琥珀。饱和色里亮度最高的色相，在所有 CVD 类型下都保持明亮。
+        static let warning = Color(red: 1.00, green: 0.69, blue: 0.13)
+
+        /// 暖橙红，不是纯红。
+        ///
+        /// 这里有个必须承认的物理限制：红是饱和色相里亮度最低的，
+        /// 所以 normal → warning → urgent 的逐像素亮度阶梯最后一段是往下走的。
+        /// 解法不是换色，是加辉光 —— 见 urgentGlow。
+        static let urgent = Color(red: 1.00, green: 0.42, blue: 0.29)
+
+        /// **这个辉光不是装饰。** 4pt 的 shadow 让发光面积约翻倍，
+        /// 而周边视觉响应的是总光通量而非峰值亮度，于是总辐射量的阶梯
+        /// 仍然单调上升。半径不能超过约 4pt，否则会被 NotchShape 的 mask 切掉。
+        static let urgentGlow = Color(red: 1.00, green: 0.35, blue: 0.20).opacity(0.65)
+
+        /// 故障态的告警字形。
+        static let fault = Color(red: 1.00, green: 0.35, blue: 0.32)
+
+        /// 非致命关切的小圆点。
+        static let concernAmber = Color(red: 1.00, green: 0.69, blue: 0.13)
+        static let concernGray = Color.white.opacity(0.35)
+    }
 }

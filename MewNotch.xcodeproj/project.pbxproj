@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		251798DC2F126FFF0050B370 /* MacroVisionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 251798DB2F126FFF0050B370 /* MacroVisionKit */; };
-		KL1NE00000000000000000A3 /* KLineCore in Frameworks */ = {isa = PBXBuildFile; productRef = KL1NE00000000000000000A2 /* KLineCore */; };
 		253243BE2E09A6220030EC15 /* DisplayServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E05A76E2D7D93A900980012 /* DisplayServices.framework */; };
 		253243C32E09A6240030EC15 /* SkyLight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 253243AF2E09A1AA0030EC15 /* SkyLight.framework */; };
 		25F325642ED64870001C93C0 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 25F325632ED64870001C93C0 /* LaunchAtLogin */; };
+		KL1NE00000000000000000A3 /* KLineCore in Frameworks */ = {isa = PBXBuildFile; productRef = KL1NE00000000000000000A2 /* KLineCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -435,10 +435,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		KL1NE00000000000000000A2 /* KLineCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = KLineCore;
-		};
 		251798DB2F126FFF0050B370 /* MacroVisionKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 251798DA2F126FFF0050B370 /* XCRemoteSwiftPackageReference "MacroVisionKit" */;
@@ -448,6 +444,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 250A20732ED646DB00FBAF0C /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
 			productName = LaunchAtLogin;
+		};
+		KL1NE00000000000000000A2 /* KLineCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KLineCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
