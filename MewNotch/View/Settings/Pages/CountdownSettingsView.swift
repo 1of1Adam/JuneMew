@@ -166,6 +166,34 @@ struct CountdownSettingsView: View {
             }
 
             Section {
+                // 没有刘海屏时 notchSize 退化为 .zero，倒计时静默地什么都不画。
+                // 用户会以为 app 坏了 —— 必须把这个状态说出来。
+                if let problem = renderabilityProblem {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label {
+                            Text(problem.headline)
+                        } icon: {
+                            MewNotch.Assets.icWarning
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+
+                        Text(problem.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if problem.offersSimulation {
+                            Button("Show on all displays") {
+                                NotchDefaults.shared.notchDisplayVisibility = .AllDisplays
+                                NotchManager.shared.refreshNotches(killAllWindows: true)
+                            }
+                            .font(.caption)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 SettingsRow(
                     title: "Verify System Clock",
                     subtitle: "Compares against two HTTPS endpoints every 30 minutes",
@@ -218,6 +246,70 @@ struct CountdownSettingsView: View {
         .formStyle(.grouped)
         .navigationTitle("Countdown")
         .toolbarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - 可渲染性自检
+
+    private struct RenderabilityProblem {
+        let headline: String
+        let detail: String
+        let offersSimulation: Bool
+    }
+
+    /// 检查当前设置下倒计时是否真的画得出来。
+    ///
+    /// `NotchUtils.notchSize` 在「屏幕没有物理刘海」且 `notchDisplayVisibility`
+    /// 为 `.NotchedDisplayOnly`（默认值）时返回 `.zero`，槽位高度归零，
+    /// 于是什么都不显示 —— 而且不报任何错。在 Mac mini / Mac Studio 或接外接屏
+    /// 的场景下，用户会以为 app 没装好。
+    private var renderabilityProblem: RenderabilityProblem? {
+        let notchDefaults = NotchDefaults.shared
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return nil }
+
+        let physicallyNotched = screens.filter { NotchUtils.shared.hasNotch(screen: $0) }
+
+        // 有真刘海屏就不必提示
+        if !physicallyNotched.isEmpty { return nil }
+
+        if notchDefaults.notchDisplayVisibility == .NotchedDisplayOnly {
+            return RenderabilityProblem(
+                headline: "No notched display detected — nothing will be drawn",
+                detail: "\"Show Notch On\" is set to \"Notched Displays Only\", and none of your "
+                    + "displays has a physical notch. Switch it to \"All Displays\" to draw a "
+                    + "simulated notch at the top centre of the screen, or use the menu bar icon instead.",
+                offersSimulation: true
+            )
+        }
+
+        // 已经强制模拟，但仍可能高度为 0（副屏没有菜单栏）
+        let renderable = screens.filter { screen in
+            NotchUtils.shared.notchSize(screen: screen, force: true).height > 1
+        }
+        if renderable.isEmpty {
+            return RenderabilityProblem(
+                headline: "Simulated notch has zero height on every display",
+                detail: "A simulated notch takes its height from the menu bar, and none of your "
+                    + "displays reports one. Move the menu bar to this display in System Settings > "
+                    + "Displays > Arrange, or use the menu bar icon instead.",
+                offersSimulation: false
+            )
+        }
+        if renderable.count < screens.count {
+            let names = screens
+                .filter { NotchUtils.shared.notchSize(screen: $0, force: true).height <= 1 }
+                .map(\.localizedName)
+                .joined(separator: ", ")
+            return RenderabilityProblem(
+                headline: "Not visible on: \(names)",
+                detail: "A simulated notch takes its height from the menu bar, which macOS only "
+                    + "puts on the primary display. The countdown will only appear on the display "
+                    + "that has the menu bar.",
+                offersSimulation: false
+            )
+        }
+
+        return nil
     }
 
     // MARK: - Diagnostics 文案
