@@ -1,0 +1,65 @@
+{
+  "exchange": "CME_EQUITY_INDEX",
+  "productsCovered": ["ES", "NQ", "MES", "MNQ"],
+  "timeZone": "America/New_York",
+
+  "verificationStatus": "unverified_draft",
+
+  "source": "https://www.cmegroup.com/tools-information/holiday-calendar.html",
+
+  "_README": [
+    "这张表尚未对照 CME 官方 Holiday Calendar 逐条核对，因此 verificationStatus 是",
+    "unverified_draft，应用会在设置页和刘海上显示告警。核对完成后把它改成 verified。",
+    "",
+    "【日期本身可信】所有日期都用联邦假日算法 + 复活节算法算出并交叉验证过，",
+    "包括 Good Friday（2026-04-03 周五 / 2027-03-26 周五）。",
+    "",
+    "【规则未核实 —— 这是需要你查证的部分】",
+    "1. 每个假期究竟是「全天休市」还是「提前收盘」。本表的假设是：",
+    "   Good Friday 与 Christmas Day 全天休市，其余联邦假日提前收盘。",
+    "2. 提前收盘的准确时刻。本表统一用 13:00 ET（= 12:00 CT），",
+    "   感恩节次日与平安夜用 13:15 ET（= 12:15 CT）。这两个值在不同产品/年份",
+    "   有 12:00 CT 与 12:15 CT 两种说法，Equity Index 的时刻也常与利率类产品不同。",
+    "3. 四个落周末的假期，观察日规则未查证（期货交易所与银行/股票市场未必一致）：",
+    "   2026-07-04 落周六 -> 本表假设 07-03 周五提前收盘",
+    "   2027-06-19 落周六 -> 本表假设 06-18 周五提前收盘",
+    "   2027-07-04 落周日 -> 本表假设 07-05 周一提前收盘",
+    "   2027-12-25 落周六 -> 本表假设 12-24 周五提前收盘（与平安夜合并）",
+    "",
+    "【怎么核对】设置页 Countdown -> Diagnostics 会显示引擎当前对今天采用的规则",
+    "（正常交易日 / 提前收盘 HH:MM ET / 全天休市），可直接和官方日历比对。",
+    "",
+    "注：条目按【结算日】索引。CME 时段从结算日前一晚 18:00 ET 开始，",
+    "所以 fullClosure 会同时抹掉前一晚的开盘。"
+  ],
+
+  "verifiedFrom": "2026-01-01",
+  "verifiedThrough": "2027-12-31",
+
+  "entries": [
+    { "date": "2026-01-01", "name": "New Year's Day",          "rule": { "type": "fullClosure" } },
+    { "date": "2026-01-19", "name": "MLK Day",                 "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-02-16", "name": "Presidents' Day",         "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-04-03", "name": "Good Friday",             "rule": { "type": "fullClosure" } },
+    { "date": "2026-05-25", "name": "Memorial Day",            "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-06-19", "name": "Juneteenth",              "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-07-03", "name": "Independence Day (obs)",  "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-09-07", "name": "Labor Day",               "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-11-26", "name": "Thanksgiving",            "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2026-11-27", "name": "Day after Thanksgiving",  "rule": { "type": "earlyClose", "at": "13:15" } },
+    { "date": "2026-12-24", "name": "Christmas Eve",           "rule": { "type": "earlyClose", "at": "13:15" } },
+    { "date": "2026-12-25", "name": "Christmas Day",           "rule": { "type": "fullClosure" } },
+
+    { "date": "2027-01-01", "name": "New Year's Day",          "rule": { "type": "fullClosure" } },
+    { "date": "2027-01-18", "name": "MLK Day",                 "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-02-15", "name": "Presidents' Day",         "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-03-26", "name": "Good Friday",             "rule": { "type": "fullClosure" } },
+    { "date": "2027-05-31", "name": "Memorial Day",            "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-06-18", "name": "Juneteenth (obs)",        "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-07-05", "name": "Independence Day (obs)",  "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-09-06", "name": "Labor Day",               "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-11-25", "name": "Thanksgiving",            "rule": { "type": "earlyClose", "at": "13:00" } },
+    { "date": "2027-11-26", "name": "Day after Thanksgiving",  "rule": { "type": "earlyClose", "at": "13:15" } },
+    { "date": "2027-12-24", "name": "Christmas Eve / Christmas (obs)", "rule": { "type": "earlyClose", "at": "13:15" } }
+  ]
+}

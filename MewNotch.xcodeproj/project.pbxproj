@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		250A205B2ED4A2C800FBAF0C /* MediaRemote.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E284D432D8B2E8000ED8E89 /* MediaRemote.framework */; };
 		251798DC2F126FFF0050B370 /* MacroVisionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 251798DB2F126FFF0050B370 /* MacroVisionKit */; };
+		KL1NE00000000000000000A3 /* KLineCore in Frameworks */ = {isa = PBXBuildFile; productRef = KL1NE00000000000000000A2 /* KLineCore */; };
 		253243BE2E09A6220030EC15 /* DisplayServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E05A76E2D7D93A900980012 /* DisplayServices.framework */; };
 		253243C32E09A6240030EC15 /* SkyLight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 253243AF2E09A1AA0030EC15 /* SkyLight.framework */; };
 		25F325642ED64870001C93C0 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 25F325632ED64870001C93C0 /* LaunchAtLogin */; };
@@ -30,7 +30,6 @@
 /* Begin PBXFileReference section */
 		253243AF2E09A1AA0030EC15 /* SkyLight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SkyLight.framework; path = ../../../../System/Library/PrivateFrameworks/SkyLight.framework; sourceTree = "<group>"; };
 		9E05A76E2D7D93A900980012 /* DisplayServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DisplayServices.framework; path = ../../../../System/Library/PrivateFrameworks/DisplayServices.framework; sourceTree = "<group>"; };
-		9E284D432D8B2E8000ED8E89 /* MediaRemote.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaRemote.framework; path = ../../../../System/Library/PrivateFrameworks/MediaRemote.framework; sourceTree = "<group>"; };
 		9EA41D872D6DEACA00817679 /* MewNotch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MewNotch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -43,9 +42,6 @@
 			target = 9EA41D862D6DEACA00817679 /* MewNotch */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9EA41D892D6DEACA00817679 /* MewNotch */ = {
@@ -64,10 +60,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				251798DC2F126FFF0050B370 /* MacroVisionKit in Frameworks */,
+				KL1NE00000000000000000A3 /* KLineCore in Frameworks */,
 				25F325642ED64870001C93C0 /* LaunchAtLogin in Frameworks */,
 				253243BE2E09A6220030EC15 /* DisplayServices.framework in Frameworks */,
 				253243C32E09A6240030EC15 /* SkyLight.framework in Frameworks */,
-				250A205B2ED4A2C800FBAF0C /* MediaRemote.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +74,6 @@
 			isa = PBXGroup;
 			children = (
 				253243AF2E09A1AA0030EC15 /* SkyLight.framework */,
-				9E284D432D8B2E8000ED8E89 /* MediaRemote.framework */,
 				9E05A76E2D7D93A900980012 /* DisplayServices.framework */,
 			);
 			name = Frameworks;
@@ -124,6 +119,7 @@
 			packageProductDependencies = (
 				25F325632ED64870001C93C0 /* LaunchAtLogin */,
 				251798DB2F126FFF0050B370 /* MacroVisionKit */,
+				KL1NE00000000000000000A2 /* KLineCore */,
 			);
 			productName = MewNotch;
 			productReference = 9EA41D872D6DEACA00817679 /* MewNotch.app */;
@@ -157,6 +153,7 @@
 			packageReferences = (
 				250A20732ED646DB00FBAF0C /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 				251798DA2F126FFF0050B370 /* XCRemoteSwiftPackageReference "MacroVisionKit" */,
+				KL1NE00000000000000000A1 /* XCLocalSwiftPackageReference "KLineCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9EA41D882D6DEACA00817679 /* Products */;
@@ -318,7 +315,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 222;
-				DEVELOPMENT_TEAM = 6GLWGGY9D7;
+				DEVELOPMENT_TEAM = 8P4JUS3B5W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = YES;
@@ -359,7 +356,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 222;
-				DEVELOPMENT_TEAM = 6GLWGGY9D7;
+				DEVELOPMENT_TEAM = 8P4JUS3B5W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = YES;
@@ -411,6 +408,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		KL1NE00000000000000000A1 /* XCLocalSwiftPackageReference "KLineCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = KLineCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		250A20732ED646DB00FBAF0C /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -431,6 +435,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		KL1NE00000000000000000A2 /* KLineCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KLineCore;
+		};
 		251798DB2F126FFF0050B370 /* MacroVisionKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 251798DA2F126FFF0050B370 /* XCRemoteSwiftPackageReference "MacroVisionKit" */;
