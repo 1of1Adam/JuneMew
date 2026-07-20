@@ -71,25 +71,32 @@ struct CountdownView: View {
     // MARK: - 正常倒计时
 
     private func countingContent(_ countdown: Countdown) -> some View {
-        // 隐形撑宽：用当前周期可能出现的最宽字符串预留宽度，
-        // 保证一根 K 线内刘海宽度恒定，只有换周期时才变。
-        Text(countdown.widthTemplate)
-            .font(countdownFont)
-            .opacity(0)
-            .overlay {
-                HStack(spacing: 4) {
+        // 关切圆点必须是数字的**兄弟节点**，不能塞进 overlay。
+        // overlay 的内容会被约束在底层视图的尺寸内，圆点挤进去会让
+        // HStack 比模板宽出「spacing + 圆点」，SwiftUI 于是压缩 Text
+        // 并截断成 "01..."。
+        HStack(spacing: 4) {
+            // 隐形撑宽：用当前周期可能出现的最宽字符串预留宽度，
+            // 保证一根 K 线内刘海宽度恒定，只有换周期时才变。
+            Text(countdown.widthTemplate)
+                .font(countdownFont)
+                .opacity(0)
+                .overlay {
                     Text(countdown.text)
                         .font(countdownFont)
                         .foregroundStyle(color(for: countdown.phase))
+                        // 兜底：任何情况下都不允许倒计时被压缩成省略号。
+                        // 宁可撑宽刘海，也不能显示一个看不全的数字。
+                        .fixedSize()
                         .shadow(
                             color: MewNotch.CountdownColors.urgentGlow,
                             radius: countdown.phase == .urgent ? 4 : 0
                         )
-
-                    concernDot(countdown.concerns)
                 }
-            }
-            .offset(y: baselineNudge)
+
+            concernDot(countdown.concerns)
+        }
+        .offset(y: baselineNudge)
             // 数字硬切。明确否决 .contentTransition(.numericText)：
             // 运动是周边视觉最强的吸引子，每秒滚一次 = 每小时 3600 次动画，
             // 会永久烧掉最后 15 秒真正需要的报警通道 —— 盯盘几天后用户会
