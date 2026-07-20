@@ -6,19 +6,13 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct NotchView: View {
-    
-    @Namespace var namespace
-    
-    @Environment(\.openSettings) private var openSettings
-    
+
     @StateObject var notchDefaults = NotchDefaults.shared
-    
+
     @StateObject var notchViewModel: NotchViewModel
-    @StateObject var expandedNotchViewModel: ExpandedNotchViewModel = .init()
-    
+
     init(
         screen: NSScreen
     ) {
@@ -28,28 +22,18 @@ struct NotchView: View {
             )
         )
     }
-    
+
     var body: some View {
         VStack {
             HStack {
                 Spacer()
-                
-                ZStack(
-                    alignment: .top
+
+                HStack(
+                    spacing: 0
                 ) {
-                    let collapsedNotchView = CollapsedNotchView(
-                        namespace: namespace,
-                        notchViewModel: notchViewModel
+                    OnlyNotchView(
+                        notchSize: notchViewModel.notchSize
                     )
-                    
-                    ExpandedNotchView(
-                        namespace: namespace,
-                        notchViewModel: notchViewModel,
-                        expandedNotchViewModel: expandedNotchViewModel,
-                        collapsedNotchView: collapsedNotchView
-                    ).hide(when: !notchViewModel.isExpanded)
-                    
-                    collapsedNotchView
                 }
                 .glassEffect(when: notchDefaults.applyGlassEffect, in: NotchShape(
                     topRadius: notchViewModel.cornerRadius.top,
@@ -66,72 +50,33 @@ struct NotchView: View {
                         bottomRadius: notchViewModel.cornerRadius.bottom
                     )
                 }
+                // 1.1 会让盯盘时鼠标无意划过导致刘海连同倒计时弹跳 10%。
                 .scaleEffect(
-                    notchViewModel.isHovered ? 1.1 : 1.0,
+                    notchViewModel.isHovered ? 1.05 : 1.0,
                     anchor: .top
                 )
                 .shadow(
                     radius: notchViewModel.isHovered ? 5 : 0
                 )
                 .onHover {
-                    notchViewModel.onHover(
-                        $0,
-                        shouldExpand: notchDefaults.expandOnHover || notchDefaults.applyGlassEffect
-                    )
+                    notchViewModel.onHover($0)
                 }
-                .dropDestination(
-                    for: URL.self,
-                    action: { fileURLs, _ in
-                        DispatchQueue.global(qos: .utility).async {
-                            guard let groupModel = ShelfFileGroupModel(
-                                urls: fileURLs
-                            ) else {
-                                print("groupModel could not be initialized")
-                                return
-                            }
-                            
-                            DispatchQueue.main.async {
-                                withAnimation {
-                                    expandedNotchViewModel.shelfFileGroups.append(
-                                        groupModel
-                                    )
-                                }
-                            }
-                        }
-                        
-                        return true
-                    },
-                    isTargeted: {
-                        notchViewModel.isDropTarget = $0
-                    }
-                )
-                .onChange(
-                    of: notchViewModel.isDropTarget
-                ) { oldValue, newValue in
-                    guard oldValue != newValue else { return }
-                    
-                    if newValue {
-                        expandedNotchViewModel.currentView = .Shelf
-                        
-                        notchViewModel.onTap()
-                    } else {
-                        notchViewModel.onHover(
-                            notchViewModel.isHovered
-                        )
-                    }
-                }
-                .onTapGesture(
-                    perform: notchViewModel.onTap
-                )
-                
+
                 Spacer()
             }
-            
+
             Spacer()
         }
         .preferredColorScheme(.dark)
         .contextMenu {
             NotchOptionsView()
+        }
+        // 从已删除的 CollapsedNotchView 搬来。这是设置变更后重算刘海尺寸的唯一
+        // 触发点 —— 不搬的话改 heightMode / notchDisplayVisibility 将完全无响应。
+        .onReceive(
+            notchDefaults.objectWillChange
+        ) {
+            notchViewModel.refreshNotchSize()
         }
     }
 }

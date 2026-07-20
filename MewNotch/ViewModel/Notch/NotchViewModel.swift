@@ -8,74 +8,66 @@
 import SwiftUI
 
 class NotchViewModel: ObservableObject {
-    
+
     var screen: NSScreen
-    
+
     @Published var notchSize: CGSize = .zero
-    
-    var cornerRadius: (
+
+    /// 折叠态是唯一形态，圆角不再随展开切换。
+    let cornerRadius: (
         top: CGFloat,
         bottom: CGFloat
     ) = (
         top: 8,
         bottom: 13
     )
-    
+
+    /// 槽位内容的水平内边距。
     var minimalHUDPadding: CGFloat = 0
-    
-    var extraNotchPadSize: CGSize = .init(
+
+    /// 折叠态刘海左右两侧的视觉留白，会被计入 `notchSize.width`。
+    /// `NotchSlotView` 用它的一半做负 padding 平移，让内容紧贴物理刘海边缘、
+    /// 黑色形体在内容外侧留呼吸位。**清零会让倒计时贴死刘海边缘。**
+    let extraNotchPadSize: CGSize = .init(
         width: 16,
         height: 0
     )
-    
-    @Published var isDropTarget: Bool = false
-    
+
+    /// 菜单栏高度。`Match_Notch` 模式下黑块比菜单栏高，倒计时垂直居中会比
+    /// 系统时钟低一截 —— 文字挨着文字时很明显，需要据此把基线顶回菜单栏光学中线。
+    var menuBarHeight: CGFloat {
+        screen.frame.maxY - screen.visibleFrame.maxY
+    }
+
     @Published var isHovered: Bool = false
-    @Published var isExpanded: Bool = false
-    
-    @Published var isPinned: Bool = false
-    
-    private var hoverTimer: Timer? = nil
-    
+
     init(
         screen: NSScreen
     ) {
         self.screen = screen
-        
-        let shouldForce = NotchDefaults.shared.notchDisplayVisibility != .NotchedDisplayOnly
-        
-        self.notchSize = NotchUtils.shared.notchSize(
-            screen: self.screen,
-            force: shouldForce
-        )
-        
-        withAnimation {
-            notchSize.width += extraNotchPadSize.width
-            notchSize.height += extraNotchPadSize.height
-            
-            minimalHUDPadding = notchSize.height * 0.2
-        }
+
+        self.refreshNotchSize()
     }
-    
+
     func refreshNotchSize() {
         let shouldForce = NotchDefaults.shared.notchDisplayVisibility != .NotchedDisplayOnly
-        
-        self.notchSize = NotchUtils.shared.notchSize(
+
+        var size = NotchUtils.shared.notchSize(
             screen: self.screen,
             force: shouldForce
         )
-        
+
+        size.width += extraNotchPadSize.width
+        size.height += extraNotchPadSize.height
+
         withAnimation {
-            notchSize.width += extraNotchPadSize.width
-            notchSize.height += extraNotchPadSize.height
-            
-            minimalHUDPadding = notchSize.height * 0.2
+            self.notchSize = size
+            self.minimalHUDPadding = size.height * 0.2
         }
     }
-    
+
     func onHover(
-        _ isHovered: Bool,
-        shouldExpand: Bool = true
+        _ isHovered: Bool
     ) {
         if NotchDefaults.shared.hapticFeedback {
             HapticsManager.shared.feedback(
@@ -83,59 +75,8 @@ class NotchViewModel: ObservableObject {
             )
         }
 
-        hoverTimer?.invalidate()
-
-        if isHovered {
-            if shouldExpand {
-                hoverTimer = .scheduledTimer(
-                    withTimeInterval: NotchDefaults.shared.expandOnHoverDelay,
-                    repeats: false
-                ) { _ in
-
-                    if NotchDefaults.shared.hapticFeedback {
-                        HapticsManager.shared.feedback(
-                            pattern: .generic
-                        )
-                    }
-
-                    self.onTap()
-                }
-            }
-        } else if !isPinned {
-            withAnimation {
-                self.isExpanded = false
-                
-                self.cornerRadius = NotchUtils.shared.collapsedCornerRadius
-                self.extraNotchPadSize = .init(
-                    width: self.cornerRadius.top * 2,
-                    height: 0
-                )
-            }
-        }
-        
         withAnimation {
             self.isHovered = isHovered
-        }
-    }
-    
-    func onTap() {
-        withAnimation(
-            .spring(
-                .bouncy(
-                    duration: 0.4,
-                    extraBounce: 0.1
-                )
-            )
-        ) {
-            self.isExpanded = true
-        }
-        
-        withAnimation {
-            self.cornerRadius = NotchUtils.shared.expandedCornerRadius
-            self.extraNotchPadSize = .init(
-                width: self.cornerRadius.top * 2,
-                height: 0
-            )
         }
     }
 }

@@ -21,16 +21,6 @@ class NotchUtils {
         )
     }
     
-    var expandedCornerRadius: (
-        top: CGFloat,
-        bottom: CGFloat
-    ) {
-        return (
-            top: 8,
-            bottom: 24
-        )
-    }
-    
     private init() { }
     
     func hasNotch(

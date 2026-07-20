@@ -15,8 +15,7 @@ struct NotchSettingsView: View {
     @StateObject private var viewModel = NotchSettingsViewModel()
     
     @StateObject var notchDefaults = NotchDefaults.shared
-    @StateObject var mirrorDefaults = MirrorDefaults.shared
-    
+
     var body: some View {
         Form {
             Section {
@@ -54,7 +53,7 @@ struct NotchSettingsView: View {
                 
                 SettingsRow(
                     title: "Show on Lock Screen",
-                    subtitle: "Incompatible with File Shelf feature",
+                    subtitle: "Keep the countdown visible while the screen is locked",
                     icon: MewNotch.Assets.icLock,
                     color: MewNotch.Colors.lock
                 ) {
@@ -74,15 +73,6 @@ struct NotchSettingsView: View {
                         .onChange(of: notchDefaults.hideOnFullScreen) { _, _ in
                             viewModel.refreshNotches()
                         }
-                }
-                
-                SettingsRow(
-                    title: "Reset View on Collapse",
-                    subtitle: notchDefaults.resetViewOnCollapse ? "Notch resets to Home when Collapsed" : "Notch will retain state when Collapsed",
-                    icon: MewNotch.Assets.icReset,
-                    color: MewNotch.Colors.notch
-                ) {
-                    Toggle("", isOn: $notchDefaults.resetViewOnCollapse)
                 }
                 
             } header: {
@@ -106,7 +96,7 @@ struct NotchSettingsView: View {
                 if #available(macOS 26.0, *) {
                     SettingsRow(
                         title: "Apply Glass Effect",
-                        subtitle: "Forces 'Expand on Hover' to be enabled",
+                        subtitle: "Use the Liquid Glass material for the notch body",
                         icon: MewNotch.Assets.icGlass,
                         color: MewNotch.Colors.glass
                     ) {
@@ -116,39 +106,8 @@ struct NotchSettingsView: View {
             } header: {
                 Text("Interface")
             }
-            
-            Section {
-                SettingsRow(
-                    title: "Expand on Hover",
-                    subtitle: "Expand notch when hovered.\nDisables click interactions in all HUDs.",
-                    icon: MewNotch.Assets.icHover,
-                    color: MewNotch.Colors.hover
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { notchDefaults.expandOnHover || notchDefaults.applyGlassEffect },
-                        set: { newValue in
-                            withAnimation {
-                                notchDefaults.expandOnHover = newValue
-                            }
-                        }
-                    ))
-                }
-                .disabled(notchDefaults.applyGlassEffect)
-                
-                SettingsRow(
-                    title: "Hover Delay",
-                    subtitle: "\(notchDefaults.expandOnHoverDelay.formatted()) seconds.\n",
-                    icon: MewNotch.Assets.icTimer,
-                    color: MewNotch.Colors.timer
-                ) {
-                    Slider(
-                        value: $notchDefaults.expandOnHoverDelay,
-                        in: 0.1...2.0,
-                        step: 0.1
-                    )
-                }
-                .hide(when: !notchDefaults.expandOnHover && !notchDefaults.applyGlassEffect)
 
+            Section {
                 SettingsRow(
                     title: "Haptic Feedback",
                     subtitle: "Play haptic feedback when hovering over the notch",

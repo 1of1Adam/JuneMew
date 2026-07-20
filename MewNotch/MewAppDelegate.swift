@@ -29,17 +29,6 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(
         _ notification: Notification
     ) {
-        if AppDefaults.shared.disableSystemHUD {
-            MediaKeyManager.shared.start()
-        }
-        
-        // Need to Initialise once to set system listeners
-        AudioInput.sharedInstance()
-        AudioOutput.sharedInstance()
-        Brightness.sharedInstance()
-        PowerStatus.sharedInstance()
-        NowPlaying.shared.startListener()
-        
         timer = .scheduledTimer(
             withTimeInterval: 30,
             repeats: false
@@ -69,8 +58,7 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication
     ) -> NSApplication.TerminateReply {
         timer?.invalidate()
-        MediaKeyManager.shared.stop()
-        
+
         return .terminateNow
     }
 }

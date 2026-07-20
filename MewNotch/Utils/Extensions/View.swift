@@ -46,12 +46,6 @@ extension View {
         modifier(HiddenViewModifier(hidden: hidden))
     }
     
-    func onMultiDrag(
-        _ items: @escaping () -> [NSPasteboardWriting]
-    ) -> some View {
-        self.overlay(DragSource(items: items))
-    }
-    
     func glassEffect(
         when enabled: Bool,
         in shape: any Shape

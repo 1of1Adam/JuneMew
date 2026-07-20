@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import Lottie
-
 class MewNotch {
     
     enum IconColor: String {
@@ -124,13 +122,6 @@ class MewNotch {
         static let autoBrightness = IconColor.green
         static let systemHud = IconColor.red
         static let video = IconColor.purple
-    }
-    
-    class Lotties {
-        static let brightness = LottieAnimation.named("Brightness.json")
-        static let speaker = LottieAnimation.named("Speaker.json")
-        static let visualizer = LottieAnimation.named("Visualizer.json")
-        static let lock = LottieAnimation.named("Lock.json")
     }
     
 }

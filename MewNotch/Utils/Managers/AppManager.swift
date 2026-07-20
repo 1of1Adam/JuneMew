@@ -5,6 +5,10 @@
 //  Created by Monu Kumar on 02/04/25.
 //
 
+// 此文件原本没有 import，靠 SWIFT_OBJC_BRIDGING_HEADER 隐式获得 AppKit。
+// 桥接头随 ObjC helpers 一并移除后，NSApplication / NSWorkspace 会找不到符号。
+import AppKit
+
 class AppManager {
     
     static let shared = AppManager()

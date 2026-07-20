@@ -16,16 +16,10 @@ struct MewSettingsView: View {
         
         case General
         case Notch
-        
-        case ExpandedItems
-        case CollapsedItems
-        
+        case Countdown
         case About
     }
 
-    
-    @StateObject var defaultsManager = MewDefaultsManager.shared
-    
     @State var selectedPage: SettingsPages = .General
     
     var body: some View {
@@ -48,23 +42,6 @@ struct MewSettingsView: View {
                         }
                             
 
-                    )
-                    
-                    Section(
-                        content: {
-                            NavigationLink(destination: CollapsedItemsSettingsView()) {
-                                SettingsSidebarRow(title: "Collapsed", icon: MewNotch.Assets.icHud, color: MewNotch.Colors.hud)
-                            }
-                            .id(SettingsPages.CollapsedItems)
-                            
-                            NavigationLink(destination: ExpandedItemsSettingsView()) {
-                                SettingsSidebarRow(title: "Expanded", icon: MewNotch.Assets.icMedia, color: MewNotch.Colors.nowPlaying)
-                            }
-                            .id(SettingsPages.ExpandedItems)
-                        },
-                        header: {
-                            Text("Notch Items")
-                        }
                     )
                     
                     Section {
