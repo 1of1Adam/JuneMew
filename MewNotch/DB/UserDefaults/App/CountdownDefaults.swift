@@ -18,6 +18,39 @@ enum CountdownPosition: String, Codable, CaseIterable, Identifiable {
         case .right: return "Right"
         }
     }
+
+    /// 图标占据数字的对侧 —— 刘海两边各有内容，视觉才平衡。
+    /// 这也沿用了项目原有的语法：左槽放图标，右槽放数值。
+    var opposite: CountdownPosition {
+        self == .left ? .right : .left
+    }
+}
+
+enum CountdownIconStyle: String, Codable, CaseIterable, Identifiable {
+    case timer
+    case clock
+    case hourglass
+    case candles
+
+    var id: String { rawValue }
+
+    var systemName: String {
+        switch self {
+        case .timer:     return "timer"
+        case .clock:     return "clock"
+        case .hourglass: return "hourglass"
+        case .candles:   return "chart.bar.xaxis"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .timer:     return "Timer"
+        case .clock:     return "Clock"
+        case .hourglass: return "Hourglass"
+        case .candles:   return "Candles"
+        }
+    }
 }
 
 /// 倒计时设置。
@@ -66,6 +99,23 @@ class CountdownDefaults: ObservableObject {
         didSet { self.objectWillChange.send() }
     }
 
+    /// 在数字的对侧槽位显示一个图标，让刘海两边平衡。
+    @PrimitiveUserDefault(
+        PREFIX + "ShowIcon",
+        defaultValue: true
+    )
+    var showIcon: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
+    @CodableUserDefault(
+        PREFIX + "IconStyle",
+        defaultValue: CountdownIconStyle.timer
+    )
+    var iconStyle: CountdownIconStyle {
+        didSet { self.objectWillChange.send() }
+    }
+
     @PrimitiveUserDefault(
         PREFIX + "WarningThreshold",
         defaultValue: 60
@@ -95,7 +145,7 @@ class CountdownDefaults: ObservableObject {
     /// 系统音名。避开 Glass —— 它是很多人的默认提示音，混淆风险高。
     @PrimitiveUserDefault(
         PREFIX + "SoundName",
-        defaultValue: "Tink"
+        defaultValue: "Funk"
     )
     var soundName: String {
         didSet { self.objectWillChange.send() }

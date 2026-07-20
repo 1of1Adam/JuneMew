@@ -79,13 +79,4 @@ class NotchDefaults: ObservableObject {
         }
     }
 
-    @PrimitiveUserDefault(
-        PREFIX + "HapticFeedback",
-        defaultValue: true
-    )
-    var hapticFeedback: Bool {
-        didSet {
-            self.objectWillChange.send()
-        }
-    }
 }

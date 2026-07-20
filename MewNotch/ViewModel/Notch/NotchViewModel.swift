@@ -39,8 +39,6 @@ class NotchViewModel: ObservableObject {
         screen.frame.maxY - screen.visibleFrame.maxY
     }
 
-    @Published var isHovered: Bool = false
-
     init(
         screen: NSScreen
     ) {
@@ -63,20 +61,6 @@ class NotchViewModel: ObservableObject {
         withAnimation {
             self.notchSize = size
             self.minimalHUDPadding = size.height * 0.2
-        }
-    }
-
-    func onHover(
-        _ isHovered: Bool
-    ) {
-        if NotchDefaults.shared.hapticFeedback {
-            HapticsManager.shared.feedback(
-                pattern: .generic
-            )
-        }
-
-        withAnimation {
-            self.isHovered = isHovered
         }
     }
 }

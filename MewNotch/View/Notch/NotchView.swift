@@ -29,26 +29,27 @@ struct NotchView: View {
             HStack {
                 Spacer()
 
+                // 图标与数字分居刘海两侧：数字在设定的一边，图标在对侧。
+                // 这沿用了项目原有的语法（左槽图标、右槽数值），也让刘海
+                // 两边都有内容而不是一头沉。
                 HStack(
                     spacing: 0
                 ) {
-                    if countdownDefaults.position == .left {
-                        CountdownView(
-                            notchViewModel: notchViewModel,
-                            variant: .left
-                        )
-                    }
+                    CountdownView(
+                        notchViewModel: notchViewModel,
+                        variant: .left,
+                        role: countdownDefaults.position == .left ? .digits : .icon
+                    )
 
                     OnlyNotchView(
                         notchSize: notchViewModel.notchSize
                     )
 
-                    if countdownDefaults.position == .right {
-                        CountdownView(
-                            notchViewModel: notchViewModel,
-                            variant: .right
-                        )
-                    }
+                    CountdownView(
+                        notchViewModel: notchViewModel,
+                        variant: .right,
+                        role: countdownDefaults.position == .right ? .digits : .icon
+                    )
                 }
                 .glassEffect(when: notchDefaults.applyGlassEffect, in: NotchShape(
                     topRadius: notchViewModel.cornerRadius.top,
@@ -65,17 +66,8 @@ struct NotchView: View {
                         bottomRadius: notchViewModel.cornerRadius.bottom
                     )
                 }
-                // 1.1 会让盯盘时鼠标无意划过导致刘海连同倒计时弹跳 10%。
-                .scaleEffect(
-                    notchViewModel.isHovered ? 1.05 : 1.0,
-                    anchor: .top
-                )
-                .shadow(
-                    radius: notchViewModel.isHovered ? 5 : 0
-                )
-                .onHover {
-                    notchViewModel.onHover($0)
-                }
+                // 刻意不做任何 hover 反馈：盯盘时鼠标无意划过刘海不该引起
+                // 任何视觉变化。右键菜单仍然可用（见下方 contextMenu）。
 
                 Spacer()
             }

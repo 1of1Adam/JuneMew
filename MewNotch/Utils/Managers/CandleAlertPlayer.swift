@@ -22,8 +22,11 @@ final class CandleAlertPlayer {
 
     private init() {}
 
-    /// 系统可用音效名。macOS 15+ 换了音效集（Boop / Bubble / Crystal…），
-    /// 所以按实际文件枚举而不是硬编码列表。
+    /// 系统可用音效名。
+    ///
+    /// 按实际文件枚举而不是硬编码列表：不同 macOS 版本的音效集会变，
+    /// 而且这样能顺带把用户放在 `~/Library/Sounds` 的自定义音效也列进来。
+    /// （实测 macOS 27 仍是经典音效集：Basso / Funk / Glass / Ping / Tink …）
     static func availableSoundNames() -> [String] {
         let directories = [
             "/System/Library/Sounds",

@@ -8,6 +8,12 @@ import KLineCore
 
 struct CountdownView: View {
 
+    /// 这个槽位画什么。图标和数字占据刘海的两侧，各自是独立的槽位实例。
+    enum Role {
+        case digits
+        case icon
+    }
+
     @ObservedObject var notchViewModel: NotchViewModel
 
     /// **必须是 @ObservedObject 引用单例，不能是 @StateObject。**
@@ -18,6 +24,7 @@ struct CountdownView: View {
     @StateObject private var defaults = CountdownDefaults.shared
 
     var variant: NotchSlotVariant
+    var role: Role = .digits
 
     // MARK: - 尺寸
 
@@ -35,6 +42,16 @@ struct CountdownView: View {
     private var countdownFont: Font {
         .system(size: fontSize, weight: .medium, design: .rounded)
             .monospacedDigit()
+    }
+
+    /// 与数字**完全相同**的 size / weight / design。
+    ///
+    /// SF Symbols 的笔画粗细和光学尺寸就是按同尺寸文字设计的 —— 只要喂同一套
+    /// 字体参数，符号就会自动与数字对齐。自己另外指定尺寸或字重（比如
+    /// `fontSize * 0.95`）反而会打破这个对齐关系。
+    /// 少了 `.monospacedDigit()`，那是数字专用特性，对符号无影响。
+    private var iconFont: Font {
+        .system(size: fontSize, weight: .medium, design: .rounded)
     }
 
     /// `Match_Notch` 模式下黑块比菜单栏高，垂直居中会让数字比系统时钟低一截。
@@ -56,16 +73,38 @@ struct CountdownView: View {
                 EmptyView()
 
             case let .counting(countdown):
-                NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
-                    countingContent(countdown)
+                switch role {
+                case .digits:
+                    NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
+                        countingContent(countdown)
+                    }
+                case .icon:
+                    if defaults.showIcon {
+                        NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
+                            iconContent()
+                        }
+                    }
                 }
 
             case let .fault(fault):
-                NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
-                    faultContent(fault)
+                // 故障时只画告警字形，图标槽让位 —— 两个符号并排会稀释警示。
+                if role == .digits {
+                    NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
+                        faultContent(fault)
+                    }
                 }
             }
         }
+    }
+
+    // MARK: - 图标
+
+    private func iconContent() -> some View {
+        Image(systemName: defaults.iconStyle.systemName)
+            .font(iconFont)
+            // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
+            .foregroundStyle(MewNotch.CountdownColors.icon)
+            .offset(y: baselineNudge)
     }
 
     // MARK: - 正常倒计时
