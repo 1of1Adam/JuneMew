@@ -80,7 +80,16 @@ struct CountdownSettingsView: View {
                     icon: Image(systemName: CountdownIcon.systemName),
                     color: MewNotch.Colors.countdown
                 ) {
-                    Toggle("", isOn: $defaults.showIcon)
+                    // 图标槽的增删不经过 engine.presentation，所以要在这里
+                    // 自己开动画事务，否则图标会瞬间消失、刘海宽度硬跳。
+                    Toggle("", isOn: Binding(
+                        get: { defaults.showIcon },
+                        set: { newValue in
+                            withAnimation(.spring(response: 0.34, dampingFraction: 0.9)) {
+                                defaults.showIcon = newValue
+                            }
+                        }
+                    ))
                 }
 
             } header: {

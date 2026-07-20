@@ -117,4 +117,21 @@ public enum CountdownPresentation: Equatable, Sendable {
         if case .counting = self { return true }
         return false
     }
+
+    /// 三种形态的标识，不含各自的载荷。
+    ///
+    /// 用来判断「刘海上的槽位是否需要增删」：同一形态内部的变化（倒计时每秒
+    /// 递减）不改变布局，跨形态切换才会。UI 层据此决定要不要开动画事务 ——
+    /// 否则每秒都会重播一次展开动画。
+    public enum Kind: Equatable, Sendable {
+        case dormant, counting, fault
+    }
+
+    public var kind: Kind {
+        switch self {
+        case .dormant:  return .dormant
+        case .counting: return .counting
+        case .fault:    return .fault
+        }
+    }
 }

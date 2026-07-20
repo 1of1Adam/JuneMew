@@ -6,6 +6,7 @@
 import AppKit
 import Combine
 import OSLog
+import SwiftUI
 import KLineCore
 
 /// 倒计时引擎。
@@ -146,6 +147,12 @@ final class CountdownEngine: ObservableObject {
         }
     }
 
+    /// 刘海展开/收起的动画曲线。
+    ///
+    /// dampingFraction 取 0.9 而非默认值：这是盯盘工具，刘海在视野边缘弹跳
+    /// 会分散注意力，要的是「顺滑地收进去」而不是「弹一下」。
+    private static let visibilityAnimation: Animation = .spring(response: 0.34, dampingFraction: 0.9)
+
     private func publish(_ next: CountdownPresentation) {
         guard next != presentation else { return }
 
@@ -155,7 +162,21 @@ final class CountdownEngine: ObservableObject {
         }
         if case .counting = next { lastLoggedFault = nil }
 
-        presentation = next
+        // 只有跨形态切换才会增删槽位、改变刘海宽度，这时才需要动画事务。
+        // 同一形态内部（倒计时每秒递减）不能包 withAnimation，否则每秒
+        // 都会重播一次展开动画。
+        //
+        // 必须用 withAnimation 而不是在视图上写 .animation(_:value:)：
+        // 后者只覆盖该视图自身的可动画属性，管不到槽位增删引起的父容器
+        // 布局重算，实测宽度仍然是瞬间跳变。withAnimation 建立的是覆盖
+        // 整个更新周期（含布局）的事务。
+        if next.kind != presentation.kind {
+            withAnimation(Self.visibilityAnimation) {
+                presentation = next
+            }
+        } else {
+            presentation = next
+        }
     }
 
     // MARK: - 显示文本

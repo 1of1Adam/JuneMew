@@ -74,38 +74,59 @@ struct CountdownView: View {
         return -(notchViewModel.notchSize.height - menuBar) / 2
     }
 
-    var body: some View {
+    /// 这个槽位此刻是否该有内容。
+    ///
+    /// **刻意不读 `defaults.isEnabled`。** 功能开关由引擎统一翻译成
+    /// `.dormant(.featureDisabled)`，所有状态变化都经 `engine.presentation`
+    /// 这一个通道进来，才能被 `publish` 里的 withAnimation 事务覆盖。
+    /// 若这里直接读 defaults，Toggle 一按视图会立刻重绘并瞬间消失，
+    /// 抢在引擎的动画事务之前，动画就白做了。
+    private var hasContent: Bool {
         // notchSize 可能退化为 0（NotchedDisplayOnly + 外接屏）。
         // 原有 HUD 都是 frame(height: 0) 所以看不见，但 Text 有固有高度会溢出。
-        if defaults.isEnabled, notchViewModel.notchSize.height > 1 {
-            switch engine.presentation {
-            case .dormant:
-                // 休市 / 功能关闭：**完全不渲染**，槽位消失，
-                // 刘海缩回原生轮廓。不是灰字，不是 opacity(0)。
-                EmptyView()
+        guard notchViewModel.notchSize.height > 1 else { return false }
 
-            case let .counting(countdown):
-                switch role {
-                case .digits:
-                    NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
-                        countingContent(countdown)
-                    }
-                case .icon:
-                    if defaults.showIcon {
-                        NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
-                            iconContent()
-                        }
-                    }
-                }
+        switch engine.presentation {
+        case .dormant:
+            // 休市 / 功能关闭：**完全不渲染**，槽位消失，刘海缩回原生轮廓。
+            // 不是灰字，不是 opacity(0)。
+            return false
+        case .counting:
+            return role == .digits || defaults.showIcon
+        case .fault:
+            // 故障时只画告警字形，图标槽让位 —— 两个符号并排会稀释警示。
+            return role == .digits
+        }
+    }
 
-            case let .fault(fault):
-                // 故障时只画告警字形，图标槽让位 —— 两个符号并排会稀释警示。
-                if role == .digits {
-                    NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
-                        faultContent(fault)
-                    }
+    var body: some View {
+        Group {
+            if hasContent {
+                NotchSlotView(notchViewModel: notchViewModel, variant: variant) {
+                    slotContent()
                 }
             }
+        }
+        // 这里刻意不写 .animation(_:value:) —— 实测无效。
+        // 该修饰符只覆盖视图自身的可动画属性，管不到槽位增删引起的
+        // 父容器布局重算，刘海宽度仍会瞬间跳变。展开/收起动画由
+        // CountdownEngine.publish 里的 withAnimation 事务驱动。
+    }
+
+    @ViewBuilder
+    private func slotContent() -> some View {
+        switch engine.presentation {
+        case let .counting(countdown):
+            if role == .digits {
+                countingContent(countdown)
+            } else {
+                iconContent()
+            }
+        case let .fault(fault):
+            faultContent(fault)
+        case .dormant:
+            // hasContent 已保证走不到这里
+            EmptyView()
         }
     }
 
