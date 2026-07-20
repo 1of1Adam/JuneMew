@@ -27,10 +27,10 @@ struct AboutAppView: View {
                     .shadow(radius: 10)
                 
                 VStack(spacing: 8) {
-                    Text("MewNotch")
+                    Text("JunNotch")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(MewNotch.Colors.notch.color)
-                    
+
                     Text("Version \(currentVersion)")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -40,20 +40,12 @@ struct AboutAppView: View {
                             Capsule()
                                 .fill(.tertiary.opacity(0.2))
                         }
-                }
-            }
 
-            VStack(spacing: 16) {
-                Button(action: {
-                    if let url = URL(string: "https://github.com/monuk7735/mew-notch") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    Text("View on GitHub")
-                        .font(.system(size: 13, weight: .medium))
-                        .frame(maxWidth: 160)
+                    Text("CME bar countdown for ES / NQ / MES / MNQ")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .padding(.top, 4)
                 }
-                .controlSize(.large)
             }
         }
         .padding(40)

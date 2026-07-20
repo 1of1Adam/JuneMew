@@ -44,14 +44,24 @@ struct CountdownView: View {
             .monospacedDigit()
     }
 
-    /// 与数字**完全相同**的 size / weight / design。
+    /// 图标字体：`bold` + 0.85 缩放。
     ///
-    /// SF Symbols 的笔画粗细和光学尺寸就是按同尺寸文字设计的 —— 只要喂同一套
-    /// 字体参数，符号就会自动与数字对齐。自己另外指定尺寸或字重（比如
-    /// `fontSize * 0.95`）反而会打破这个对齐关系。
-    /// 少了 `.monospacedDigit()`，那是数字专用特性，对符号无影响。
+    /// 「喂相同字体参数就会自动对齐」是错的 —— 放大渲染实测（数字 "0" medium
+    /// 为基准，20 倍渲染后逐像素扫描墨迹边界与笔画宽度）：
+    ///
+    /// ```
+    ///   timer 字重      笔画 vs 数字    墨迹高 vs 数字
+    ///   medium            0.93×            1.38×
+    ///   semibold          1.04×            1.40×
+    ///   bold              1.18×            1.41×
+    ///   bold ×0.85        1.00×            1.20×   ← 采用
+    /// ```
+    ///
+    /// SF Symbol 的墨迹高度基线在 cap height 之上还留了空间，所以同 point size
+    /// 下比数字大近四成；同样的笔画摊在更大的字形上，视觉上就更显细。
+    /// 必须同时压尺寸和加字重才对得齐。
     private var iconFont: Font {
-        .system(size: fontSize, weight: .medium, design: .rounded)
+        .system(size: fontSize * 0.85, weight: .bold, design: .rounded)
     }
 
     /// `Match_Notch` 模式下黑块比菜单栏高，垂直居中会让数字比系统时钟低一截。
@@ -100,7 +110,7 @@ struct CountdownView: View {
     // MARK: - 图标
 
     private func iconContent() -> some View {
-        Image(systemName: defaults.iconStyle.systemName)
+        Image(systemName: CountdownIcon.systemName)
             .font(iconFont)
             // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
             .foregroundStyle(MewNotch.CountdownColors.icon)

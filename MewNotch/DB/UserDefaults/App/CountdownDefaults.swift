@@ -26,31 +26,12 @@ enum CountdownPosition: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum CountdownIconStyle: String, Codable, CaseIterable, Identifiable {
-    case timer
-    case clock
-    case hourglass
-    case candles
-
-    var id: String { rawValue }
-
-    var systemName: String {
-        switch self {
-        case .timer:     return "timer"
-        case .clock:     return "clock"
-        case .hourglass: return "hourglass"
-        case .candles:   return "chart.bar.xaxis"
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .timer:     return "Timer"
-        case .clock:     return "Clock"
-        case .hourglass: return "Hourglass"
-        case .candles:   return "Candles"
-        }
-    }
+/// 刘海上的倒计时图标。
+///
+/// 只用 `timer` 一个符号：它的笔画权重和墨迹比例已经按数字实测校准过
+/// （见 `CountdownView.iconFont`），换成别的符号需要各自重新校准一套参数。
+enum CountdownIcon {
+    static let systemName = "timer"
 }
 
 /// 倒计时设置。
@@ -108,13 +89,6 @@ class CountdownDefaults: ObservableObject {
         didSet { self.objectWillChange.send() }
     }
 
-    @CodableUserDefault(
-        PREFIX + "IconStyle",
-        defaultValue: CountdownIconStyle.timer
-    )
-    var iconStyle: CountdownIconStyle {
-        didSet { self.objectWillChange.send() }
-    }
 
     @PrimitiveUserDefault(
         PREFIX + "WarningThreshold",

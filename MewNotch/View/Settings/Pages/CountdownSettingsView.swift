@@ -77,28 +77,12 @@ struct CountdownSettingsView: View {
                     title: "Show Icon",
                     subtitle: "Sits on the \(defaults.position.opposite.displayName.lowercased()) "
                         + "side, opposite the digits",
-                    icon: MewNotch.Assets.icCandle,
+                    icon: Image(systemName: CountdownIcon.systemName),
                     color: MewNotch.Colors.countdown
                 ) {
                     Toggle("", isOn: $defaults.showIcon)
                 }
 
-                if defaults.showIcon {
-                    SettingsRow(
-                        title: "Icon",
-                        icon: Image(systemName: defaults.iconStyle.systemName),
-                        color: MewNotch.Colors.countdown
-                    ) {
-                        Picker("", selection: $defaults.iconStyle) {
-                            ForEach(CountdownIconStyle.allCases) { style in
-                                Label(style.displayName, systemImage: style.systemName)
-                                    .tag(style)
-                            }
-                        }
-                        .labelsHidden()
-                        .frame(width: 140)
-                    }
-                }
             } header: {
                 Text("Countdown")
             }
