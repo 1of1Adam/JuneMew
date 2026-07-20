@@ -120,7 +120,7 @@ struct CountdownView: View {
             if role == .digits {
                 countingContent(countdown)
             } else {
-                iconContent(countdown)
+                iconContent()
             }
         case let .fault(fault):
             faultContent(fault)
@@ -130,15 +130,14 @@ struct CountdownView: View {
         }
     }
 
-    // MARK: - 图标（进度环）
+    // MARK: - 图标
 
-    private func iconContent(_ countdown: Countdown) -> some View {
-        CountdownRing(
-            fractionRemaining: countdown.fractionRemaining,
-            color: color(for: countdown.phase),
-            diameter: fontSize * 1.35
-        )
-        .offset(y: baselineNudge)
+    private func iconContent() -> some View {
+        Image(systemName: CountdownIcon.systemName)
+            .font(iconFont)
+            // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
+            .foregroundStyle(MewNotch.CountdownColors.icon)
+            .offset(y: baselineNudge)
     }
 
     // MARK: - 正常倒计时
@@ -259,55 +258,10 @@ struct CountdownView: View {
     }
 
     private func color(for phase: CountdownPhase) -> Color {
-        // 环的相位色：normal 用琥珀（不是数字的白）—— 环是「计时器」隐喻，
-        // 常态就该是暖色的锚点；warning / urgent 与数字同色，一起变红。
         switch phase {
-        case .normal:  return MewNotch.CountdownColors.icon
+        case .normal:  return MewNotch.CountdownColors.normal
         case .warning: return MewNotch.CountdownColors.warning
         case .urgent:  return MewNotch.CountdownColors.urgent
         }
-    }
-}
-
-/// 消耗式进度环 —— 随当前 K 线剩余比例收缩，视觉上是一个「活的计时器」。
-///
-/// 关键：它每秒只转 1.2°（5m 周期），在余光里基本等同静止，不触发变化检测。
-/// 这与被否决的滚动数字（每秒一次离散跳变）是完全不同的刺激。
-struct CountdownRing: View {
-
-    /// 剩余比例，`0...1`。开盘约 1，收线约 0。
-    let fractionRemaining: Double
-    let color: Color
-    let diameter: CGFloat
-
-    private var lineWidth: CGFloat { max(1.5, diameter * 0.11) }
-
-    var body: some View {
-        ZStack {
-            // 轨道：环走空后剩下的暗色底，让「消耗」看得出来
-            Circle()
-                .stroke(MewNotch.CountdownColors.ringTrack, lineWidth: lineWidth)
-
-            // 进度弧：从 12 点开始，顺时针，长度 = 剩余比例
-            Circle()
-                .trim(from: 0, to: fractionRemaining)
-                .stroke(
-                    color,
-                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-
-            // 中心点：静态锚，强化「计时器表盘」的观感
-            Circle()
-                .fill(color)
-                .frame(width: lineWidth * 1.3, height: lineWidth * 1.3)
-        }
-        .frame(width: diameter, height: diameter)
-        // 每秒收到一个新的剩余比例；用线性补间让环在两次 tick 之间匀速转，
-        // 而不是每秒跳一下。duration 1.0 恰好衔接下一次 tick。
-        // 相位变色也走这条，0.25s 太短会被 1s 覆盖 —— 但颜色渐变本身很快，
-        // 观感上无碍。
-        .animation(.linear(duration: 1.0), value: fractionRemaining)
-        .animation(.easeInOut(duration: 0.25), value: color)
     }
 }

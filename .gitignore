@@ -5,3 +5,5 @@ build/
 DerivedData/
 dist/
 build/
+KLineCore/.build/
+*.o
