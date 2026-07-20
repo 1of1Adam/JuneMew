@@ -44,24 +44,25 @@ struct CountdownView: View {
             .monospacedDigit()
     }
 
-    /// 图标字体：`bold` + 0.85 缩放。
+    /// 图标字体：`bold` + 1.05 缩放。
     ///
-    /// 「喂相同字体参数就会自动对齐」是错的 —— 放大渲染实测（数字 "0" medium
-    /// 为基准，20 倍渲染后逐像素扫描墨迹边界与笔画宽度）：
+    /// 参数是实测定的，不是估的 —— 以数字 "0"（medium）为基准，把 clock 以
+    /// 20 倍放大渲染，逐像素扫描墨迹边界与笔画宽度：
     ///
     /// ```
-    ///   timer 字重      笔画 vs 数字    墨迹高 vs 数字
-    ///   medium            0.93×            1.38×
-    ///   semibold          1.04×            1.40×
-    ///   bold              1.18×            1.41×
-    ///   bold ×0.85        1.00×            1.20×   ← 采用
+    ///   clock 字重/缩放     墨迹高 vs 数字    笔画 vs 数字
+    ///   medium  ×1.00           1.38×            0.93×   偏细
+    ///   semibold×1.05           1.46×            1.07×
+    ///   bold    ×1.05           1.48×            1.25×   ← 采用
+    ///   heavy   ×1.00           1.44×            1.39×   过粗
     /// ```
     ///
-    /// SF Symbol 的墨迹高度基线在 cap height 之上还留了空间，所以同 point size
-    /// 下比数字大近四成；同样的笔画摊在更大的字形上，视觉上就更显细。
-    /// 必须同时压尺寸和加字重才对得齐。
+    /// 两点值得记住：
+    /// 1. SF Symbol 的墨迹基线在 cap height 之上还留了空间，同 point size 下
+    ///    比数字大近四成 —— 所以「喂相同字体参数」并不会让它们看起来一样大。
+    /// 2. 字形越大，同样的笔画看起来越细。缩尺寸和加字重必须一起调。
     private var iconFont: Font {
-        .system(size: fontSize * 0.85, weight: .bold, design: .rounded)
+        .system(size: fontSize * 1.05, weight: .bold, design: .rounded)
     }
 
     /// `Match_Notch` 模式下黑块比菜单栏高，垂直居中会让数字比系统时钟低一截。

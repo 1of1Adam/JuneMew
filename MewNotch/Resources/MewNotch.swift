@@ -101,6 +101,10 @@ class MewNotch {
     class Colors {
         static let general = IconColor.gray
         static let notch = IconColor.blue
+
+        /// About 页的应用名标题。独立于 `notch`（那个是设置项图标的底色），
+        /// 免得日后调其中一个把另一个也带偏。
+        static let appTitle = IconColor.pink
         
         static let mirror = IconColor.purple
         static let nowPlaying = IconColor.pink

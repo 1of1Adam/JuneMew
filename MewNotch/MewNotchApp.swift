@@ -29,7 +29,7 @@ struct MewNotchApp: App {
         MenuBarExtra(
             isInserted: $isMenuShown,
             content: {
-                Text("JunNotch")
+                Text("JuneMew")
                 
                 NotchOptionsView()
             }

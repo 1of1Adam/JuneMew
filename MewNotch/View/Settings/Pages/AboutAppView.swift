@@ -27,9 +27,9 @@ struct AboutAppView: View {
                     .shadow(radius: 10)
                 
                 VStack(spacing: 8) {
-                    Text("JunNotch")
+                    Text("JuneMew")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(MewNotch.Colors.notch.color)
+                        .foregroundStyle(MewNotch.Colors.appTitle.color)
 
                     Text("Version \(currentVersion)")
                         .font(.system(size: 14, weight: .medium, design: .rounded))

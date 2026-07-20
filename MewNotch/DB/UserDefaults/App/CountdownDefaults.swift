@@ -28,10 +28,10 @@ enum CountdownPosition: String, Codable, CaseIterable, Identifiable {
 
 /// 刘海上的倒计时图标。
 ///
-/// 只用 `timer` 一个符号：它的笔画权重和墨迹比例已经按数字实测校准过
+/// 只用 `clock` 一个符号：它的笔画权重和墨迹比例已经按数字实测校准过
 /// （见 `CountdownView.iconFont`），换成别的符号需要各自重新校准一套参数。
 enum CountdownIcon {
-    static let systemName = "timer"
+    static let systemName = "clock"
 }
 
 /// 倒计时设置。
