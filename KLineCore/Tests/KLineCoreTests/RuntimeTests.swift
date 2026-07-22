@@ -295,6 +295,32 @@ final class AlertArmingTests: XCTestCase {
         }
         XCTAssertEqual(fires, 1)
     }
+
+    /// 阈值必须被如实遵守 —— 设 30 就在剩 30 秒时响，不是 15。
+    ///
+    /// 用户报过「改成 30 秒还是只在 15s 响」。真正的根因在设置层
+    /// （换周期时阈值被重置，见 ThresholdClampTests），但这里把
+    /// 「引擎侧按给定阈值触发」这条性质也钉住，排除回归。
+    func testFiresExactlyAtTheGivenThreshold() {
+        for threshold in [5, 15, 30, 60, 120] {
+            var arming = AlertArming()
+            var firedAt: Int?
+
+            for remaining in stride(from: 300, through: 1, by: -1) {
+                if arming.shouldFire(
+                    remainingSeconds: remaining,
+                    barCloses: closeA,
+                    threshold: threshold
+                ) {
+                    XCTAssertNil(firedAt, "阈值 \(threshold) 触发了不止一次")
+                    firedAt = remaining
+                }
+            }
+
+            XCTAssertEqual(firedAt, threshold,
+                           "阈值设为 \(threshold) 时应当恰好在剩 \(threshold) 秒触发")
+        }
+    }
 }
 
 final class CountdownPhaseTests: XCTestCase {

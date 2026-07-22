@@ -21,7 +21,7 @@ struct CountdownView: View {
     /// 以及每根 K 线 N 次响铃。
     @ObservedObject private var engine = CountdownEngine.shared
 
-    @StateObject private var defaults = CountdownDefaults.shared
+    @ObservedObject private var defaults = CountdownDefaults.shared
 
     var variant: NotchSlotVariant
     var role: Role = .digits

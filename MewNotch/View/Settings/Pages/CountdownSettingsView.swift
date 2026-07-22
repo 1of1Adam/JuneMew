@@ -8,7 +8,7 @@ import KLineCore
 
 struct CountdownSettingsView: View {
 
-    @StateObject private var defaults = CountdownDefaults.shared
+    @ObservedObject private var defaults = CountdownDefaults.shared
     @ObservedObject private var engine = CountdownEngine.shared
 
     private let availableSounds = CandleAlertPlayer.availableSoundNames()
@@ -34,8 +34,15 @@ struct CountdownSettingsView: View {
                     Picker("", selection: Binding(
                         get: { defaults.period },
                         set: { newPeriod in
+                            // 两道保险，缺一不可：
+                            // ① 值没变就什么都不做。SwiftUI 的 Picker 在视图重建或
+                            //    重复选中同一项时也会调 setter。
+                            // ② 只夹取、不重置。阈值是用户手调的绝对秒数，
+                            //    换周期不该把它们冲掉。
+                            // 这两条正是「响铃阈值改成 30 秒却还是 15 秒响」的修复。
+                            guard newPeriod != defaults.period else { return }
                             defaults.period = newPeriod
-                            defaults.applyRecommendedThresholds(for: newPeriod)
+                            defaults.clampThresholdsToPeriod()
                         }
                     )) {
                         ForEach(BarPeriod.userSelectable) { period in
@@ -160,25 +167,62 @@ struct CountdownSettingsView: View {
                             .labelsHidden()
                             .frame(width: 130)
 
+                            // 试听永远只响一次，不受 Alert Mode 影响 ——
+                            // 点「试听」结果开始无限循环会很吓人。
                             Button("Test") {
-                                CandleAlertPlayer.shared.play(named: defaults.soundName)
+                                CandleAlertPlayer.shared.play(
+                                    named: defaults.soundName,
+                                    repeating: false
+                                )
                             }
                         }
                     }
 
                     SettingsRow(
-                        title: "Sound Threshold",
-                        subtitle: "Fires once per bar, \(defaults.soundThreshold)s before close",
+                        title: "Alert Mode",
+                        subtitle: defaults.alertMode == .once
+                            ? "One beep per bar"
+                            : "Keeps ringing until you stop it from the menu bar icon",
+                        icon: MewNotch.Assets.icBell,
+                        color: MewNotch.Colors.alert
+                    ) {
+                        Picker("", selection: $defaults.alertMode) {
+                            ForEach(AlertMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 150)
+                    }
+
+                    SettingsRow(
+                        title: "Alert At",
+                        subtitle: "\(defaults.soundThreshold)s before the bar closes",
                         icon: MewNotch.Assets.icTimer,
                         color: MewNotch.Colors.timer
                     ) {
+                        // step 5 而不是 1：这是「设一次就不动」的参数，
+                        // 从 15 调到 30 点 3 下比点 15 下合理。
                         Stepper(
                             "",
                             value: $defaults.soundThreshold,
-                            in: 1...max(1, defaults.period.seconds - 1),
-                            step: 1
+                            in: 5...max(5, defaults.period.seconds - 1),
+                            step: 5
                         )
                         .labelsHidden()
+                    }
+
+                    if defaults.alertMode == .untilDismissed {
+                        Label {
+                            Text("The sound will not stop on its own. Stop it from the menu bar "
+                                 + "icon (⌘.) — it also stops when the market closes or you turn "
+                                 + "the countdown off.")
+                        } icon: {
+                            MewNotch.Assets.icWarning
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .padding(.leading, 44)
                     }
                 }
             } header: {

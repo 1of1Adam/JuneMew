@@ -10,7 +10,7 @@ import LaunchAtLogin
 
 struct GeneraSettingsView: View {
     
-    @StateObject var appDefaults = AppDefaults.shared
+    @ObservedObject var appDefaults = AppDefaults.shared
 
     var body: some View {
         Form {

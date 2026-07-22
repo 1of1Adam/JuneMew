@@ -14,7 +14,7 @@ struct NotchSettingsView: View {
     
     @StateObject private var viewModel = NotchSettingsViewModel()
     
-    @StateObject var notchDefaults = NotchDefaults.shared
+    @ObservedObject var notchDefaults = NotchDefaults.shared
 
     var body: some View {
         Form {

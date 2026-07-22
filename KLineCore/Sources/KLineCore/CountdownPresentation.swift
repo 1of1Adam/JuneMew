@@ -37,12 +37,36 @@ public struct CountdownThresholds: Equatable, Sendable {
         self.urgent = urgent
     }
 
-    /// 换周期时的推荐默认值。上限用百分比封顶，避免 15s 在 1m 周期上
+    /// 首次使用时的推荐默认值。上限用百分比封顶，避免 15s 在 1m 周期上
     /// 盖掉整整 1/4 根 K 线。
+    ///
+    /// **只用于初始化，绝不用于「换周期时重置」** —— 阈值是用户手动调的
+    /// 绝对秒数，换周期时应当保留（见 `clamped(toPeriodSeconds:)`）。
     public static func recommended(for period: BarPeriod) -> CountdownThresholds {
         let warning = max(2, min(60, period.seconds / 4))
         let urgent  = max(1, min(15, period.seconds / 10))
         return CountdownThresholds(warning: warning, urgent: max(1, min(urgent, warning - 1)))
+    }
+
+    /// 把阈值夹进新周期的合法范围，**尽最大可能保留用户设定的绝对秒数**。
+    ///
+    /// 这是「换周期」时的正确行为。曾经的实现是无条件套用 `recommended`，
+    /// 结果用户手调的阈值会被静默重置 —— 而且 SwiftUI 的 Picker 在视图重建
+    /// 或重复选中同一项时也会触发 setter，导致设置莫名其妙地变回默认值。
+    ///
+    /// 阈值的语义是绝对秒数（交易者的反应窗口不随 K 线周期缩放），所以只要
+    /// 在新周期里仍然合法就原样保留；只有放不下时才按比例压缩。
+    public func clamped(toPeriodSeconds periodSeconds: Int) -> CountdownThresholds {
+        precondition(periodSeconds >= 3, "period must be at least 3s, got \(periodSeconds)")
+
+        // warning 最多占到周期的最后一秒之前；urgent 必须严格小于 warning
+        let newWarning = min(warning, periodSeconds - 1)
+        let newUrgent  = min(urgent, newWarning - 1)
+
+        return CountdownThresholds(
+            warning: max(2, newWarning),
+            urgent: max(1, newUrgent)
+        )
     }
 }
 

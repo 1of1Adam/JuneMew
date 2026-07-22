@@ -26,6 +26,23 @@ enum CountdownPosition: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// 收线提醒的响法。
+enum AlertMode: String, Codable, CaseIterable, Identifiable {
+    /// 响一声就停。
+    case once
+    /// 持续响到用户手动关闭 —— 适合离开屏幕、必须被叫回来的场景。
+    case untilDismissed
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .once:           return "Once"
+        case .untilDismissed: return "Until dismissed"
+        }
+    }
+}
+
 /// 刘海上的倒计时图标。
 ///
 /// 只用 `timer` 一个符号。它与 `clock` 在同一套字体参数下的墨迹高度和笔画
@@ -126,11 +143,21 @@ class CountdownDefaults: ObservableObject {
         didSet { self.objectWillChange.send() }
     }
 
+    /// 提前多少秒响。默认 30 秒 —— 15 秒对「看一眼图再决定动不动手」太紧。
     @PrimitiveUserDefault(
         PREFIX + "SoundThreshold",
-        defaultValue: 15
+        defaultValue: 30
     )
     var soundThreshold: Int {
+        didSet { self.objectWillChange.send() }
+    }
+
+    /// 响一次还是持续响到手动关闭。
+    @CodableUserDefault(
+        PREFIX + "AlertMode",
+        defaultValue: AlertMode.once
+    )
+    var alertMode: AlertMode {
         didSet { self.objectWillChange.send() }
     }
 
@@ -155,11 +182,25 @@ class CountdownDefaults: ObservableObject {
         return CountdownThresholds(warning: warning, urgent: urgent)
     }
 
-    /// 切换周期时套用推荐阈值。
-    func applyRecommendedThresholds(for period: BarPeriod) {
-        let recommended = CountdownThresholds.recommended(for: period)
-        warningThreshold = recommended.warning
-        urgentThreshold = recommended.urgent
-        soundThreshold = recommended.urgent
+    /// 切换周期后，把阈值夹进新周期的合法范围。
+    ///
+    /// **刻意不套用推荐值。** 曾经这里是无条件 `applyRecommendedThresholds`，
+    /// 结果用户手调的阈值会被静默重置回默认值 —— 而且 SwiftUI 的 Picker 在
+    /// 视图重建或重复选中同一项时也会触发 setter，让设置莫名其妙地变回去。
+    /// 这正是「响铃阈值改成 30 秒却还是 15 秒响」的根因。
+    ///
+    /// 阈值是绝对秒数（反应窗口不随周期缩放），所以只在放不下时才压缩。
+    func clampThresholdsToPeriod() {
+        let clamped = CountdownThresholds(
+            warning: max(2, warningThreshold),
+            urgent: max(1, min(urgentThreshold, max(1, warningThreshold - 1)))
+        ).clamped(toPeriodSeconds: period.seconds)
+
+        if warningThreshold != clamped.warning { warningThreshold = clamped.warning }
+        if urgentThreshold != clamped.urgent { urgentThreshold = clamped.urgent }
+
+        // 响铃阈值独立于变色阈值，单独夹取到周期内
+        let clampedSound = min(max(1, soundThreshold), period.seconds - 1)
+        if soundThreshold != clampedSound { soundThreshold = clampedSound }
     }
 }

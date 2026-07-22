@@ -79,7 +79,7 @@ final class CountdownEngine: ObservableObject {
 
     private func evaluate(at instant: Date) {
         guard defaults.isEnabled else {
-            arming.disarm()
+            standDown()
             return publish(.dormant(.featureDisabled))
         }
 
@@ -91,7 +91,7 @@ final class CountdownEngine: ObservableObject {
         // 2) 时钟可信度是前置闸门：不可信就不算，更不显示
         let verdict = ClockPolicy.verdict(for: clockTrust, now: instant)
         if case let .untrusted(offset) = verdict {
-            arming.disarm()
+            standDown()
             if case .jumped = clockTrust {
                 return publish(.fault(.clockJumped(delta: offset)))
             }
@@ -103,14 +103,14 @@ final class CountdownEngine: ObservableObject {
         // 3) 假期表有效期检查，发生在查询**之前**
         let staleDays = daysStale(at: instant, calendar: calendar)
         if staleDays > expiryGraceDays {
-            arming.disarm()
+            standDown()
             return publish(.fault(.holidayTableExpired(daysStale: staleDays)))
         }
 
         // 4) 正常路径。任何 throw 都变成 fault，不吞
         do {
             guard let session = try calendar.session(containing: instant) else {
-                arming.disarm()
+                standDown()
                 let nextOpen = try? calendar.nextOpen(after: instant)
                 updateDiagnostics(session: nil, at: instant, calendar: calendar)
                 return publish(.dormant(.marketClosed(nextOpen: nextOpen)))
@@ -120,13 +120,20 @@ final class CountdownEngine: ObservableObject {
             let thresholds = defaults.thresholds
             let phase = CountdownPhase.of(remainingSeconds: bar.remainingSeconds, thresholds: thresholds)
 
-            if defaults.soundEnabled,
-               arming.shouldFire(
-                   remainingSeconds: bar.remainingSeconds,
-                   barCloses: bar.closes,
-                   threshold: defaults.soundThreshold
-               ) {
-                CandleAlertPlayer.shared.play(named: defaults.soundName)
+            if defaults.soundEnabled {
+                if arming.shouldFire(
+                    remainingSeconds: bar.remainingSeconds,
+                    barCloses: bar.closes,
+                    threshold: defaults.soundThreshold
+                ) {
+                    CandleAlertPlayer.shared.play(
+                        named: defaults.soundName,
+                        repeating: defaults.alertMode == .untilDismissed
+                    )
+                }
+            } else {
+                // 播放中途关掉开关，必须立刻停 —— 一个关不掉的循环音是灾难
+                CandleAlertPlayer.shared.dismiss()
             }
 
             updateDiagnostics(session: session, at: instant, calendar: calendar)
@@ -142,9 +149,19 @@ final class CountdownEngine: ObservableObject {
                 concerns: concerns(verdict: verdict, staleDays: staleDays, calendar: calendar)
             )))
         } catch {
-            arming.disarm()
+            standDown()
             publish(.fault(.calendarInconsistent(String(describing: error))))
         }
+    }
+
+    /// 离开正常计时状态：解除提醒武装，并停止任何持续响铃。
+    ///
+    /// 持续响铃模式下「停不下来」是最严重的失败模式 —— 休市了还在响、
+    /// 功能关了还在响、时钟出错了还在响，用户会以为 app 坏了而且找不到出口。
+    /// 所以每一条离开正常计时的分支都必须经过这里，而不是只 disarm。
+    private func standDown() {
+        arming.disarm()
+        CandleAlertPlayer.shared.dismiss()
     }
 
     /// 刘海展开/收起的动画曲线。

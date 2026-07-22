@@ -17,14 +17,26 @@ struct NotchOptionsView: View {
 
     @Environment(\.openSettings) private var openSettings
 
-    @StateObject private var appDefaults = AppDefaults.shared
-    @StateObject private var countdownDefaults = CountdownDefaults.shared
+    @ObservedObject private var appDefaults = AppDefaults.shared
+    @ObservedObject private var countdownDefaults = CountdownDefaults.shared
+    @ObservedObject private var alertPlayer = CandleAlertPlayer.shared
 
     var type: OptionsType = .ContextMenu
 
     var body: some View {
+        // 正在持续响铃时，停止入口必须排在最前、最好找。
+        // 菜单栏图标是常驻的，这是唯一保证可达的出口。
+        if alertPlayer.isAlerting {
+            Button("🔕  Stop Alert") {
+                CandleAlertPlayer.shared.dismiss()
+            }
+            .keyboardShortcut(".", modifiers: .command)
+
+            Divider()
+        }
+
         // Toggle 在 macOS 菜单里会渲染成带勾选标记的菜单项。
-        // 放在最前面 —— 这是盘中最常用的一项，不该埋在下面。
+        // 放在前面 —— 这是盘中最常用的一项，不该埋在下面。
         Toggle(
             "Show Countdown",
             isOn: $countdownDefaults.isEnabled

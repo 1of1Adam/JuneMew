@@ -9,8 +9,8 @@ import SwiftUI
 
 struct NotchView: View {
 
-    @StateObject var notchDefaults = NotchDefaults.shared
-    @StateObject var countdownDefaults = CountdownDefaults.shared
+    @ObservedObject var notchDefaults = NotchDefaults.shared
+    @ObservedObject var countdownDefaults = CountdownDefaults.shared
 
     @StateObject var notchViewModel: NotchViewModel
 
