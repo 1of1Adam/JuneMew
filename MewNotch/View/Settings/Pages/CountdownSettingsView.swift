@@ -213,16 +213,26 @@ struct CountdownSettingsView: View {
                     }
 
                     if defaults.alertMode == .untilDismissed {
-                        Label {
-                            Text("The sound will not stop on its own. Stop it from the menu bar "
-                                 + "icon (⌘.) — it also stops when the market closes or you turn "
-                                 + "the countdown off.")
-                        } icon: {
-                            MewNotch.Assets.icWarning
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label {
+                                Text("**Click the notch to stop it.** The notch turns into a "
+                                     + "stop button while ringing — it sits at the top edge of "
+                                     + "the screen, so flicking the pointer upwards always hits it.")
+                            } icon: {
+                                Image(systemName: "hand.tap.fill")
+                            }
+                            .foregroundStyle(.primary)
+
+                            Text("The menu bar icon becomes a bell and also stops it. "
+                                 + "The sound stops on its own when the market closes, when you "
+                                 + "turn the countdown off, or if the clock becomes unreliable — "
+                                 + "but it will not stop just because the bar closed.")
+                            .foregroundStyle(.secondary)
                         }
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.leading, 44)
+                        .padding(.top, 2)
                     }
                 }
             } header: {

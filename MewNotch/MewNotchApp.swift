@@ -16,6 +16,7 @@ struct MewNotchApp: App {
     @Environment(\.openSettings) private var openSettings
 
     @ObservedObject private var appDefaults = AppDefaults.shared
+    @ObservedObject private var alertPlayer = CandleAlertPlayer.shared
 
     @State private var isMenuShown: Bool = true
 
@@ -34,8 +35,15 @@ struct MewNotchApp: App {
                 NotchOptionsView()
             }
         ) {
-            MewNotch.Assets.iconMenuBar
-                .renderingMode(.template)
+            // 第二入口：刘海可能被全屏应用挡住、或在另一块屏上，
+            // 而菜单栏图标始终可见。响铃时它换成铃铛，既是状态提示
+            // 也是「这里能关」的指引。
+            if alertPlayer.isAlerting {
+                Image(systemName: "bell.fill")
+            } else {
+                MewNotch.Assets.iconMenuBar
+                    .renderingMode(.template)
+            }
         }
         .onChange(
             of: appDefaults.showMenuIcon

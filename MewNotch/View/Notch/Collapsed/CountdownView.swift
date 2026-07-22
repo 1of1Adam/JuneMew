@@ -22,6 +22,7 @@ struct CountdownView: View {
     @ObservedObject private var engine = CountdownEngine.shared
 
     @ObservedObject private var defaults = CountdownDefaults.shared
+    @ObservedObject private var alertPlayer = CandleAlertPlayer.shared
 
     var variant: NotchSlotVariant
     var role: Role = .digits
@@ -132,12 +133,23 @@ struct CountdownView: View {
 
     // MARK: - 图标
 
+    @ViewBuilder
     private func iconContent() -> some View {
-        Image(systemName: CountdownIcon.systemName)
-            .font(iconFont)
-            // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
-            .foregroundStyle(MewNotch.CountdownColors.icon)
-            .offset(y: baselineNudge)
+        if alertPlayer.isAlerting {
+            // 正在响铃：图标换成脉动的铃铛，并与刘海整体一起构成「点我停止」。
+            //
+            // 这里用持续动画是**正当**的，且正是我一直把运动留给报警时刻的目的：
+            // 常态下一切静止（数字硬切、图标不动），所以此刻的脉动在余光里
+            // 极为醒目，不会被适应屏蔽。
+            AlertingBell(font: iconFont)
+                .offset(y: baselineNudge)
+        } else {
+            Image(systemName: CountdownIcon.systemName)
+                .font(iconFont)
+                // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
+                .foregroundStyle(MewNotch.CountdownColors.icon)
+                .offset(y: baselineNudge)
+        }
     }
 
     // MARK: - 正常倒计时
@@ -263,5 +275,36 @@ struct CountdownView: View {
         case .warning: return MewNotch.CountdownColors.warning
         case .urgent:  return MewNotch.CountdownColors.urgent
         }
+    }
+}
+
+/// 持续响铃时替代常规图标的脉动铃铛。
+///
+/// 脉动是这个 app 里唯一的常驻动画，这是刻意的：其余一切都保持静止
+/// （数字硬切、图标不动、进度不转），所以此刻的运动在余光里格外醒目。
+/// 把运动留到真正需要打断注意力的时刻 —— 这正是当初否决滚动数字的目的。
+private struct AlertingBell: View {
+
+    let font: Font
+
+    @State private var pulsing = false
+
+    var body: some View {
+        Image(systemName: "bell.fill")
+            .font(font)
+            .foregroundStyle(MewNotch.CountdownColors.urgent)
+            .shadow(color: MewNotch.CountdownColors.urgentGlow, radius: 4)
+            // 用 opacity 而非 scale 脉动：尺寸变化会让相邻的数字跟着位移，
+            // 在视野边缘读数时非常烦人。
+            .opacity(pulsing ? 0.40 : 1.0)
+            .animation(
+                // 0.55s 一个来回接近平静心率，是「持续提醒」而非「紧急闪烁」。
+                // 太快会制造焦虑，太慢又会被忽略。
+                .easeInOut(duration: 0.55).repeatForever(autoreverses: true),
+                value: pulsing
+            )
+            .onAppear { pulsing = true }
+            .onDisappear { pulsing = false }
+            .accessibilityLabel("Alert ringing. Click the notch to stop.")
     }
 }

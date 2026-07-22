@@ -24,13 +24,17 @@ struct NotchOptionsView: View {
     var type: OptionsType = .ContextMenu
 
     var body: some View {
-        // 正在持续响铃时，停止入口必须排在最前、最好找。
-        // 菜单栏图标是常驻的，这是唯一保证可达的出口。
+        // 响铃时的兜底入口。主入口是「点击刘海」——
+        // 那个目标在屏幕顶边、又宽，比翻菜单快得多。
+        //
+        // 这里刻意**不加** keyboardShortcut：本 app 是 .accessory 策略，
+        // 永远不会成为 active app，菜单项的快捷键只在菜单已经打开时才响应，
+        // 标在这里只会误导用户以为存在全局热键。真要做全局热键得上
+        // Carbon RegisterEventHotKey，那是另一件事。
         if alertPlayer.isAlerting {
             Button("🔕  Stop Alert") {
                 CandleAlertPlayer.shared.dismiss()
             }
-            .keyboardShortcut(".", modifiers: .command)
 
             Divider()
         }
