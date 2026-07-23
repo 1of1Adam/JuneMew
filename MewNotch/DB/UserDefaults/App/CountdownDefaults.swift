@@ -107,6 +107,17 @@ class CountdownDefaults: ObservableObject {
         didSet { self.objectWillChange.send() }
     }
 
+    /// 刘海仪表盘总开关：悬停轻微放大提示可点，点击展开。
+    /// 默认开 —— 两段反馈都是纯主动交互，不碰刘海就不存在，
+    /// 与「常态克制」不冲突；关掉后刘海对鼠标完全无反应（响铃时除外）。
+    @PrimitiveUserDefault(
+        PREFIX + "DashboardEnabled",
+        defaultValue: true
+    )
+    var dashboardEnabled: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
 
     @PrimitiveUserDefault(
         PREFIX + "WarningThreshold",

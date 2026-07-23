@@ -244,29 +244,7 @@ struct CountdownView: View {
             .font(.system(size: fontSize))
             .foregroundStyle(MewNotch.CountdownColors.fault)
             .offset(y: baselineNudge)
-            .help(faultDescription(fault))
-    }
-
-    private func faultDescription(_ fault: Fault) -> String {
-        switch fault {
-        case let .clockOffsetExceedsTolerance(offset, threshold):
-            return String(
-                format: "System clock is off by %+.1fs (tolerance %.0fs). "
-                    + "Countdown hidden because it cannot be trusted.",
-                offset, threshold
-            )
-        case let .clockJumped(delta):
-            return String(
-                format: "System clock jumped by %+.1fs. Recalibrating…", delta
-            )
-        case let .holidayTableExpired(daysStale):
-            return "Holiday table expired \(daysStale) days ago. "
-                + "Session boundaries can no longer be trusted."
-        case let .holidayTableUnreadable(detail):
-            return "Holiday table could not be read: \(detail)"
-        case let .calendarInconsistent(detail):
-            return "Trading calendar inconsistency: \(detail)"
-        }
+            .help(fault.userDescription)
     }
 
     private func color(for phase: CountdownPhase) -> Color {

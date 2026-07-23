@@ -99,6 +99,16 @@ struct CountdownSettingsView: View {
                     ))
                 }
 
+                SettingsRow(
+                    title: "Notch Dashboard",
+                    subtitle: "Hovering highlights the notch; clicking it opens every period, "
+                        + "session info and quick controls",
+                    icon: MewNotch.Assets.icHover,
+                    color: MewNotch.Colors.hover
+                ) {
+                    Toggle("", isOn: $defaults.dashboardEnabled)
+                }
+
             } header: {
                 Text("Countdown")
             }

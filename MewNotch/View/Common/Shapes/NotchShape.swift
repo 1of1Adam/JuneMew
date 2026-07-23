@@ -20,9 +20,14 @@ struct NotchShape: Shape {
         self.topRadius = topRadius
     }
     
-    var animatableData: CGFloat {
-        get { bottomRadius }
-        set { bottomRadius = newValue }
+    /// 两个圆角都要参与插值 —— 悬停展开时上下圆角一起变大，
+    /// 只插 bottom 会让顶角在动画中途硬跳。
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(topRadius, bottomRadius) }
+        set {
+            topRadius = newValue.first
+            bottomRadius = newValue.second
+        }
     }
     
     func path(

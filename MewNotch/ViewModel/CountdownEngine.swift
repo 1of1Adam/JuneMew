@@ -9,6 +9,26 @@ import OSLog
 import SwiftUI
 import KLineCore
 
+/// 悬停展开仪表盘的每秒快照。
+///
+/// 由 engine 在主评估循环里顺带算出，面板只做渲染 ——
+/// K 线边界的真理来源必须唯一（`BarClock`），面板自己跑一套计算
+/// 就会出现「主倒计时和矩阵差一秒」这类无法解释的错位。
+struct DashboardModel: Equatable {
+
+    struct PeriodEntry: Equatable, Identifiable {
+        let period: BarPeriod
+        let remainingText: String
+        var id: Int { period.rawValue }
+    }
+
+    /// 全部可选周期的剩余时间，顺序同 `BarPeriod.userSelectable`。
+    let entries: [PeriodEntry]
+
+    /// 距时段收盘，已格式化（`H:MM:SS`）。
+    let sessionRemainingText: String
+}
+
 /// 倒计时引擎。
 ///
 /// **必须是单例。** `NotchManager.refreshNotches()` 为每块屏各建一个 `NotchView`，
@@ -20,6 +40,10 @@ final class CountdownEngine: ObservableObject {
     static let shared = CountdownEngine()
 
     @Published private(set) var presentation: CountdownPresentation = .dormant(.featureDisabled)
+
+    /// 仅在 `.counting` 时非空。与 `presentation` 在同一个 tick 里更新，
+    /// 所以面板矩阵和主倒计时永远显示同一瞬间的值。
+    @Published private(set) var dashboard: DashboardModel?
 
     /// 供设置页 Diagnostics 显示。
     @Published private(set) var clockTrust: ClockTrust = .unverified(since: Date(), lastError: "starting up")
@@ -78,6 +102,14 @@ final class CountdownEngine: ObservableObject {
     // MARK: - 主评估循环
 
     private func evaluate(at instant: Date) {
+        // 仪表盘快照只在走到正常路径时被填充；任何提前 return（故障、休市、
+        // 功能关闭）都让它保持 nil。用 defer 统一提交，杜绝「某条分支忘了清空、
+        // 面板展示昨天的矩阵」这类腐烂数据。
+        var nextDashboard: DashboardModel? = nil
+        defer {
+            if dashboard != nextDashboard { dashboard = nextDashboard }
+        }
+
         guard defaults.isEnabled else {
             standDown()
             return publish(.dormant(.featureDisabled))
@@ -137,6 +169,24 @@ final class CountdownEngine: ObservableObject {
             }
 
             updateDiagnostics(session: session, at: instant, calendar: calendar)
+
+            nextDashboard = DashboardModel(
+                entries: try BarPeriod.userSelectable.map { p in
+                    DashboardModel.PeriodEntry(
+                        period: p,
+                        remainingText: BarClock.format(
+                            remainingSeconds: try BarClock.bar(
+                                at: instant, period: p, session: session
+                            ).remainingSeconds
+                        )
+                    )
+                },
+                sessionRemainingText: BarClock.format(
+                    remainingSeconds: max(1, Int(
+                        session.closes.timeIntervalSince(instant).rounded(.up)
+                    ))
+                )
+            )
 
             publish(.counting(Countdown(
                 text: displayText(for: bar),
