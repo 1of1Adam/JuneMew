@@ -34,6 +34,12 @@ struct NotchView: View {
     /// 之前「点击停铃后手型残留」就是回调路径里漏了一次 pop。
     @State private var cursorPushed = false
 
+    /// 鼠标是否正按在折叠态刘海上。驱动「按下蓄力」的微缩：
+    /// duang 的前半句是「被压下去」，释放的弹开才有物理来历。
+    /// 只在折叠态有意义 —— 展开态的面板是内容区，按压反馈
+    /// 属于面板内各自的按钮。
+    @State private var isPressingNotch = false
+
     /// 展开期间挂载的全局鼠标监听。全局 monitor 只报告发往**其他应用**
     /// 的点击 —— 正是「面板外」的精确定义（面板内的点击走本窗口的
     /// onTapGesture，不经过它）。挂/摘统一放在 isExpanded 的 onChange，
@@ -44,17 +50,59 @@ struct NotchView: View {
     /// 出问题时没有日志就只能瞎猜 —— debug 级别，默认零成本。
     private static let logger = Logger(subsystem: "io.github.1of1adam.JuneMew", category: "hover")
 
+    /// 系统「减弱动态效果」。刘海是常驻 UI，运动敏感用户没有别的退路 ——
+    /// 开启时所有形变/位移动画退化为纯透明度渐变。
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // MARK: - 动效参数
 
-    /// 展开：带一点弹性的生长。展开是用户主动点击的时刻，
-    /// 允许一点生命力；damping 0.82 在「有回弹」和「不晃」之间。
-    private static let expandAnimation: Animation = .spring(response: 0.38, dampingFraction: 0.82)
+    /// 展开：一次真正的弹簧。展开是用户主动点击的时刻，值得「duang」
+    /// 一下的生命力。
+    ///
+    /// 参数是按弹簧物理选的，不是试出来的手感玄学：
+    /// 欠阻尼弹簧的过冲幅度 ≈ exp(-πζ/√(1-ζ²))，对 ~320pt 的展开行程 ——
+    ///
+    ///   ζ 0.82 → 过冲 1%（≈4pt）   旧值，读不出弹，只是「停得软」
+    ///   ζ 0.70 → 过冲 5%（≈15pt）  优雅但含蓄
+    ///   ζ 0.65 → 过冲 7%（≈22pt）  一次清晰的 duang + 一次不可见的回摆 ← 采用
+    ///   ζ 0.55 → 过冲 12%（≈38pt） 晃两下以上，信息面板开始显得不稳重
+    ///
+    /// response 同步放宽到 0.45 —— 弹簧需要时间展示弹性，0.38 太快，
+    /// 过冲被压缩在几帧里根本看不清。内容转场（panelReveal）与圆角、
+    /// 阴影都在同一事务里，会跟着形体一起过冲再落回，浑然一体。
+    private var expandAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.16)
+            : .spring(response: 0.45, dampingFraction: 0.65)
+    }
 
     /// 收起：干脆利落，不弹。收起是「我不要了」，还回弹一下等于纠缠。
-    private static let collapseAnimation: Animation = .spring(response: 0.28, dampingFraction: 0.95)
+    private var collapseAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.14)
+            : .spring(response: 0.28, dampingFraction: 0.95)
+    }
 
-    /// 悬停放大：即时反馈要快，比展开动画明显更短。
-    private static let hoverAnimation: Animation = .spring(response: 0.26, dampingFraction: 0.78)
+    /// 悬停放大：即时反馈要快，比展开动画明显更短。只用于**进入**悬停。
+    private var hoverAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.12)
+            : .spring(response: 0.26, dampingFraction: 0.78)
+    }
+
+    /// 悬停退出：柔和落回，不弹。移开鼠标是「注意力已经走了」，
+    /// 刘海在余光里还弹一下是多余的动 —— 进快出慢是 Apple 系
+    /// hover 反馈的通则。
+    private var hoverExitAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.12)
+            : .easeOut(duration: 0.32)
+    }
+
+    /// 按下蓄力：压缩要即时（按下的力是瞬时的），弹开交给 expandAnimation。
+    private var pressAnimation: Animation {
+        .easeOut(duration: 0.12)
+    }
 
     init(
         screen: NSScreen
@@ -121,40 +169,57 @@ struct NotchView: View {
                             notchViewModel: notchViewModel,
                             isExpanded: $isExpanded
                         )
-                        // 内容从模糊中聚焦、随形体一起落位 —— 面板和黑色
-                        // 形体要读成「一体成形」，而不是黑块先到、字再贴上去。
-                        .transition(.panelReveal)
+                        // 内容随形体一起落位 —— 面板和黑色形体要读成
+                        // 「一体成形」，而不是黑块先到、字再贴上去。
+                        .transition(.panelReveal(reduceMotion: reduceMotion))
                     }
                 }
-                .glassEffect(when: notchDefaults.applyGlassEffect, in: NotchShape(
-                    topRadius: currentTopRadius,
-                    bottomRadius: currentBottomRadius
-                ))
-                .background {
-                    if !notchDefaults.applyGlassEffect {
-                        Color.black
-                    }
-                }
-                // 响铃且悬停时，黑色形体透出一层暖光 —— 明确回答「这里能点吗」。
-                .overlay {
-                    if isHoveringToStop {
-                        MewNotch.CountdownColors.urgent.opacity(0.16)
-                    }
-                }
-                .mask {
+                // ── 渲染层结构（性能关键，动之前先读懂）──
+                //
+                // 旧结构是 glassEffect + background(黑矩形) + mask(NotchShape)
+                // + 整树 .shadow，正是展开卡顿的主因：.shadow 的模糊源是
+                // 「整棵内容树」的光栅化，动画期间树每帧都在变，等于每帧对
+                // 整个仪表盘做一次全量高斯模糊；mask 再叠一层全树离屏合成。
+                //
+                // 新结构把所有贵的效果钉在背景形状层：阴影/玻璃/暖光的
+                // 渲染源都只是一块纯色 NotchShape，与内容树彻底解耦 ——
+                // 内容再复杂、动画再久，每帧要重新模糊的都只是一个单色轮廓。
+                //
+                // clipShape 是「长出来」质感的来源，删不得：转场中的视图
+                // **不参与布局** —— 展开时面板内容一步就位在最终位置，黑色
+                // 形体还在后面长，没有裁剪的话内容会浮在形体边界外整片淡入；
+                // 收起时同理会露在收缩中的形体下方。裁掉之后，内容才是被
+                // 形体边缘像卷帘一样渐次揭示/吞没的 —— 这正是灵动岛。
+                // 用 clipShape 而不是旧版的 mask：几何裁剪，无模糊、
+                // 无 alpha 中间纹理，性能与 mask 不是一个量级。
+                .clipShape(
                     NotchShape(
                         topRadius: currentTopRadius,
                         bottomRadius: currentBottomRadius
                     )
-                }
-                // 展开时面板悬在别人的窗口内容上方，需要一层影来分离；
-                // 折叠时必须无影 —— 刘海黑块要和菜单栏融为一体，有影就露馅。
-                // 悬停放大的瞬间给一层浅影，让「浮起来一点」在余光里成立。
-                .shadow(
-                    color: .black.opacity(shadowOpacity),
-                    radius: isExpanded ? 14 : 6,
-                    y: isExpanded ? 5 : 2
                 )
+                .background {
+                    notchBackground
+                        // 展开时面板悬在别人的窗口内容上方，需要一层影来分离；
+                        // 折叠时必须无影 —— 刘海黑块要和菜单栏融为一体，
+                        // 有影就露馅。悬停放大的瞬间给一层浅影，
+                        // 让「浮起来一点」在余光里成立。
+                        .shadow(
+                            color: .black.opacity(shadowOpacity),
+                            radius: isExpanded ? 14 : 6,
+                            y: isExpanded ? 5 : 2
+                        )
+                }
+                // 响铃且悬停时，黑色形体透出一层暖光 —— 明确回答「这里能点吗」。
+                .overlay {
+                    if isHoveringToStop {
+                        NotchShape(
+                            topRadius: currentTopRadius,
+                            bottomRadius: currentBottomRadius
+                        )
+                        .fill(MewNotch.CountdownColors.urgent.opacity(0.16))
+                    }
+                }
                 // 悬停反馈：整个形体（含影）从顶边轻微放大。anchor 必须是
                 // .top —— 刘海贴着屏幕顶边，从中心缩放会在顶上露出一条缝。
                 .scaleEffect(hoverScale, anchor: .top)
@@ -178,22 +243,42 @@ struct NotchView: View {
 
                     if isExpanded {
                         Self.logger.debug("collapsing (tap)")
-                        withAnimation(Self.collapseAnimation) {
+                        withAnimation(collapseAnimation) {
                             isExpanded = false
                         }
                     } else if canExpandNow() {
                         Self.logger.debug("expanding (tap)")
-                        withAnimation(Self.expandAnimation) {
+                        withAnimation(expandAnimation) {
                             isExpanded = true
                         }
                     }
                 }
+                // 按下蓄力的观察通道。simultaneousGesture 与 onTapGesture、
+                // 面板内子按钮并行识别，谁的语义都不抢 —— 这里只读
+                // 「按没按着」。minimumDistance 0 让 mouseDown 即刻触发。
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            guard !isPressingNotch, !isExpanded else { return }
+                            withAnimation(pressAnimation) {
+                                isPressingNotch = true
+                            }
+                        }
+                        .onEnded { _ in
+                            // 释放：若接着展开，scale 由 expandAnimation
+                            // 事务接管，从压缩态起跳 —— 蓄力得到释放。
+                            withAnimation(hoverAnimation) {
+                                isPressingNotch = false
+                            }
+                        }
+                )
                 .onHover { hovering in
                     Self.logger.debug(
                         "hover=\(hovering) alerting=\(alertPlayer.isAlerting) expanded=\(isExpanded)"
                     )
 
-                    withAnimation(Self.hoverAnimation) {
+                    // 进快带弹（有东西迎接你），出柔无弹（安静退场）。
+                    withAnimation(hovering ? hoverAnimation : hoverExitAnimation) {
                         isHoveringNotch = hovering
                     }
 
@@ -242,7 +327,7 @@ struct NotchView: View {
                     Task { @MainActor in
                         guard isExpanded else { return }
                         Self.logger.debug("collapsing (clicked outside)")
-                        withAnimation(Self.collapseAnimation) {
+                        withAnimation(collapseAnimation) {
                             isExpanded = false
                         }
                     }
@@ -256,7 +341,7 @@ struct NotchView: View {
         // 单一语义，不能一半是仪表盘、一半是警报。
         .onChange(of: alertPlayer.isAlerting) { _, alerting in
             if alerting {
-                withAnimation(Self.collapseAnimation) {
+                withAnimation(collapseAnimation) {
                     isExpanded = false
                 }
             }
@@ -265,10 +350,29 @@ struct NotchView: View {
         // 而不是等下一次鼠标移出。
         .onChange(of: countdownDefaults.dashboardEnabled) { _, enabled in
             if !enabled {
-                withAnimation(Self.collapseAnimation) {
+                withAnimation(collapseAnimation) {
                     isExpanded = false
                 }
             }
+        }
+    }
+
+    // MARK: - 背景形状层
+
+    /// 黑色形体（或液态玻璃）。独立成层是性能设计：阴影、暖光、玻璃的
+    /// 渲染源都是这个纯形状，内容树不参与任何离屏渲染 —— 这一点是
+    /// 展开/收起动画流畅的前提，别把效果搬回内容树上。
+    @ViewBuilder
+    private var notchBackground: some View {
+        let shape = NotchShape(
+            topRadius: currentTopRadius,
+            bottomRadius: currentBottomRadius
+        )
+        if notchDefaults.applyGlassEffect {
+            Color.clear
+                .glassEffect(when: true, in: shape)
+        } else {
+            shape.fill(Color.black)
         }
     }
 
@@ -286,10 +390,12 @@ struct NotchView: View {
         isExpanded ? 24 : notchViewModel.cornerRadius.bottom
     }
 
-    /// 悬停时形体放大 4.5%。展开后不再放大 —— 岛已经在最前台了，
-    /// 叠加缩放会让面板文字轻微发虚。
+    /// 悬停时形体放大 4.5%；按下压回 0.98 —— 比静止还小一点，
+    /// 释放时弹开的行程才清晰。展开后两者都不再生效 ——
+    /// 岛已经在最前台了，叠加缩放会让面板文字轻微发虚。
     private var hoverScale: CGFloat {
         guard !isExpanded else { return 1.0 }
+        if isPressingNotch { return 0.98 }
         return isHoveringNotch ? 1.045 : 1.0
     }
 
@@ -337,25 +443,61 @@ struct NotchView: View {
 
 // MARK: - 面板内容的展开转场
 
-/// 「从模糊中聚焦」：blur + 透明度 + 从顶部轻微缩放，三者绑在同一个
-/// 进度上随形体的 spring 一起走。这是灵动岛的质感来源 —— 内容不是
-/// 贴在黑块上的贴纸，而是和黑块一起从刘海里长出来的。
+/// 「随形体落位」：透明度 + 从顶部轻微缩放，绑在同一个进度上随形体的
+/// spring 一起走 —— 内容不是贴在黑块上的贴纸，而是和黑块一起从刘海里
+/// 长出来的。
+///
+/// 这里刻意没有 blur：动画中的 blur 无法缓存，每帧都要对整个面板做一次
+/// 全量高斯模糊，是旧版展开掉帧的主要来源之一。opacity / scale / offset
+/// 都是纯合成属性，GPU 直接吃 —— 灵动岛真机的内容进出场同样只用这些。
 private struct PanelRevealModifier: ViewModifier {
 
     /// 0 = 隐藏形态，1 = 就位。
     let progress: CGFloat
 
+    /// 隐藏形态缩到 1 - depth。
+    let depth: CGFloat
+
+    /// 隐藏形态向刘海方向抬起的距离（收起的「吸入感」来源）。
+    /// 抬出去的部分被外层 clipShape 吞掉，不会露在形体外。
+    let lift: CGFloat
+
+    /// 减弱动态效果时只保留透明度渐变。
+    let reduceMotion: Bool
+
     func body(content: Content) -> some View {
         content
             .opacity(progress)
-            .blur(radius: (1 - progress) * 6)
-            .scaleEffect(0.96 + 0.04 * progress, anchor: .top)
+            .scaleEffect(
+                reduceMotion ? 1 : 1 - depth * (1 - progress),
+                anchor: .top
+            )
+            .offset(y: reduceMotion ? 0 : -lift * (1 - progress))
     }
 }
 
 extension AnyTransition {
-    static let panelReveal = AnyTransition.modifier(
-        active: PanelRevealModifier(progress: 0),
-        identity: PanelRevealModifier(progress: 1)
-    )
+    /// 进出不对称：展开时内容在原位从 0.96 长到位（形体边缘负责揭示，
+    /// 内容自己不必大动）；收起时缩得更深并向上抬 7pt —— 读成
+    /// 「被刘海吸回去」，而不是原地淡掉。
+    static func panelReveal(reduceMotion: Bool) -> AnyTransition {
+        .asymmetric(
+            insertion: .modifier(
+                active: PanelRevealModifier(
+                    progress: 0, depth: 0.04, lift: 0, reduceMotion: reduceMotion
+                ),
+                identity: PanelRevealModifier(
+                    progress: 1, depth: 0.04, lift: 0, reduceMotion: reduceMotion
+                )
+            ),
+            removal: .modifier(
+                active: PanelRevealModifier(
+                    progress: 0, depth: 0.07, lift: 7, reduceMotion: reduceMotion
+                ),
+                identity: PanelRevealModifier(
+                    progress: 1, depth: 0.07, lift: 7, reduceMotion: reduceMotion
+                )
+            )
+        )
+    }
 }

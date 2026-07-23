@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Combine
 import KLineCore
 
 /// 点击展开的交易仪表盘 —— 一座从刘海里长出来的灵动岛。
@@ -30,10 +31,32 @@ struct NotchDashboardView: View {
     /// 由 NotchView 持有的展开状态。面板里点 Settings 后要收起自己。
     @Binding var isExpanded: Bool
 
-    @ObservedObject private var engine = CountdownEngine.shared
+    /// 面板主体**刻意不 @ObservedObject 订阅 engine** —— engine 的
+    /// objectWillChange 每秒都 fire（倒计时 tick），直接订阅会让整个面板
+    /// （日历、快讯、控制行全部）每秒重算一遍 body；展开动画约 0.5s，
+    /// 几乎必撞一次 tick，撞上就是肉眼可见的掉帧。
+    ///
+    /// 主体只关心「形态」：counting / fault / dormant 及其非秒级参数。
+    /// 用 removeDuplicates 把每秒 tick 滤掉；每秒要跳的数字被隔离在
+    /// PeriodMatrixView 这棵小子树里自己刷新。
+    @State private var mode: PanelMode
+
     @ObservedObject private var defaults = CountdownDefaults.shared
 
+    /// 更新提示入口的数据源。变化是天级的（发现新版本 / 会话结束），
+    /// 不破坏面板「只在形态变化时重算」的低频模型。
+    @ObservedObject private var updaterManager = UpdaterManager.shared
+
     @Environment(\.openSettings) private var openSettings
+
+    init(
+        notchViewModel: NotchViewModel,
+        isExpanded: Binding<Bool>
+    ) {
+        self.notchViewModel = notchViewModel
+        self._isExpanded = isExpanded
+        self._mode = State(initialValue: PanelMode(CountdownEngine.shared.presentation))
+    }
 
     /// 面板内容的固定宽度。
     ///
@@ -46,7 +69,7 @@ struct NotchDashboardView: View {
 
     var body: some View {
         Group {
-            switch engine.presentation {
+            switch mode {
             case .counting:
                 countingDashboard()
             case let .fault(fault):
@@ -59,6 +82,14 @@ struct NotchDashboardView: View {
         .padding(.horizontal, 16)
         .padding(.top, 9)
         .padding(.bottom, 13)
+        // counting 的秒级 payload 在 PanelMode 里被抹平，每秒 tick
+        // 到这里就被 removeDuplicates 拦下 —— 面板主体只在真正
+        // 换形态（含 fault/dormant 参数变化）时重算。
+        .onReceive(
+            CountdownEngine.shared.$presentation
+                .map(PanelMode.init)
+                .removeDuplicates()
+        ) { mode = $0 }
     }
 
     // MARK: - 正常计时
@@ -74,21 +105,11 @@ struct NotchDashboardView: View {
     @ViewBuilder
     private func countingDashboard() -> some View {
         VStack(spacing: 10) {
-            if let dashboard = engine.dashboard {
-                HStack(spacing: 8) {
-                    ForEach(dashboard.entries) { entry in
-                        PeriodCard(
-                            period: entry.period,
-                            remainingText: entry.remainingText,
-                            isCurrent: entry.period == defaults.period,
-                            selectionNamespace: periodSelection
-                        ) {
-                            select(entry.period)
-                        }
-                    }
-                }
-                .cascade(0, shown: cascadeIn)
-            }
+            PeriodMatrixView(
+                selectionNamespace: periodSelection,
+                select: select
+            )
+            .cascade(0, shown: cascadeIn)
 
             calendarBlock(startingAt: 1)
 
@@ -164,6 +185,28 @@ struct NotchDashboardView: View {
 
             Spacer(minLength: 20)
 
+            // 后台发现的新版本在这里常驻入口 —— 系统通知可能被拒、
+            // 被划走，仪表盘是用户每天都会打开的地方，兜得住底。
+            // 琥珀点 = 全面板统一的「注意」语义。
+            if let version = updaterManager.pendingUpdateVersion {
+                HoverChip {
+                    // 与设置同理：Sparkle 窗口会抢焦点，先收面板。
+                    isExpanded = false
+                    updaterManager.checkForUpdates()
+                } content: {
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(MewNotch.CountdownColors.icon)
+                            .frame(width: 4, height: 4)
+
+                        Text("新版本 v\(version)")
+                            .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.7))
+                    }
+                }
+                .help("JuneMew v\(version) 已就绪 — 点击开始安装")
+            }
+
             HoverChip {
                 // 先收面板再开设置窗，否则设置窗抢焦点后 onHover 不再回调，
                 // 面板会僵在展开态。
@@ -220,18 +263,28 @@ struct NotchDashboardView: View {
         }
     }
 
-    private func etTime(_ date: Date) -> String {
+    // DateFormatter 的创建以毫秒计价，必须缓存 —— 在 body 求值路径里
+    // 每次现建两个，展开动画的首帧就得多付这笔税。
+    private static let etTimeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone(identifier: "America/New_York")
         f.dateFormat = "EEE HH:mm"
-        return f.string(from: date) + " ET"
+        return f
+    }()
+
+    private static let localTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE HH:mm"
+        return f
+    }()
+
+    private func etTime(_ date: Date) -> String {
+        Self.etTimeFormatter.string(from: date) + " ET"
     }
 
     private func localTime(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "EEE HH:mm"
-        return f.string(from: date)
+        Self.localTimeFormatter.string(from: date)
     }
 
     private func relativeToOpen(_ open: Date, now: Date) -> String {
@@ -267,6 +320,59 @@ struct NotchDashboardView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - 面板形态投影
+
+/// 面板主体真正关心的形态。counting 的秒级 payload 被刻意抹平 ——
+/// PanelMode 相等 ⇒ 面板主体不重算，这就是每秒 tick 被滤掉的机制。
+/// fault / dormant 保留 payload：故障文案、开盘时间变了要如实更新。
+private enum PanelMode: Equatable {
+    case counting
+    case fault(Fault)
+    case dormant(Dormancy)
+
+    init(_ presentation: CountdownPresentation) {
+        switch presentation {
+        case .counting:
+            self = .counting
+        case let .fault(fault):
+            self = .fault(fault)
+        case let .dormant(dormancy):
+            self = .dormant(dormancy)
+        }
+    }
+}
+
+// MARK: - 周期矩阵
+
+/// 周期卡矩阵。**每秒重绘的边界就是这棵小子树** —— 只有它订阅 engine，
+/// 每秒 tick 只 diff 这几张纯文本卡片，面板其余部分（日历、快讯、
+/// 控制行）纹丝不动。把它并回主面板前先想清楚这一点。
+private struct PeriodMatrixView: View {
+
+    @ObservedObject private var engine = CountdownEngine.shared
+    @ObservedObject private var defaults = CountdownDefaults.shared
+
+    let selectionNamespace: Namespace.ID
+    let select: (BarPeriod) -> Void
+
+    var body: some View {
+        if let dashboard = engine.dashboard {
+            HStack(spacing: 8) {
+                ForEach(dashboard.entries) { entry in
+                    PeriodCard(
+                        period: entry.period,
+                        remainingText: entry.remainingText,
+                        isCurrent: entry.period == defaults.period,
+                        selectionNamespace: selectionNamespace
+                    ) {
+                        select(entry.period)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -339,20 +445,31 @@ private struct PeriodCard: View {
 
 // MARK: - 级联进场
 
-/// 展开时面板区块依次落位：轻微上移 + 透明 → 就位。间隔 45ms ——
+/// 展开时面板区块依次落位：上移 + 透明 → 就位。间隔 40ms ——
 /// 快到读不出「排队」，只留下「岛是活的」的质感。只在进场时生效；
 /// 收起走整体 panelReveal，不排队。
+///
+/// opacity + offset 都是纯合成属性，级联本身不贵。弹性参数与形体的
+/// expandAnimation（ζ=0.65）同族：damping 0.75 让每个区块落位时
+/// 微微冲过头再回来 —— 形体在 duang，区块也得跟着 duang，
+/// 各弹各的会读成「内容是贴上去的」。行程 -9pt 是为了让这次过冲
+/// 可感：行程太短时，同样的过冲比例连一个像素都凑不出来。
 private struct CascadeIn: ViewModifier {
     let index: Int
     let shown: Bool
 
+    /// 减弱动态效果：不位移，只按同样的节奏淡入。
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func body(content: Content) -> some View {
         content
             .opacity(shown ? 1 : 0)
-            .offset(y: shown ? 0 : -7)
+            .offset(y: (shown || reduceMotion) ? 0 : -9)
             .animation(
-                .spring(response: 0.42, dampingFraction: 0.86)
-                    .delay(Double(index) * 0.045),
+                reduceMotion
+                    ? .easeOut(duration: 0.16).delay(Double(index) * 0.03)
+                    : .spring(response: 0.4, dampingFraction: 0.75)
+                        .delay(Double(index) * 0.04),
                 value: shown
             )
     }

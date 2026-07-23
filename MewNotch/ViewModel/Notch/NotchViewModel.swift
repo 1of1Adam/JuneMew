@@ -58,7 +58,9 @@ class NotchViewModel: ObservableObject {
         size.width += extraNotchPadSize.width
         size.height += extraNotchPadSize.height
 
-        withAnimation {
+        // 与 CountdownEngine.visibilityAnimation 同参 —— 刘海尺寸变化
+        // 无论从哪条路径触发，都该是同一种「顺滑收放」。
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.9)) {
             self.notchSize = size
             self.minimalHUDPadding = size.height * 0.2
         }
