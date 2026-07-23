@@ -49,6 +49,10 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
 
         CountdownEngine.shared.start()
 
+        // 经济日历与快讯：读缓存秒显 + 后台刷新。各自检查开关。
+        EconomicCalendarStore.shared.start()
+        NewsStore.shared.start()
+
         NSApp.setActivationPolicy(.accessory)
     }
 

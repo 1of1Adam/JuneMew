@@ -24,14 +24,21 @@ struct NotchView: View {
     /// 驱动轻微放大的悬停反馈：「刘海活着，点一下有东西」。
     @State private var isHoveringNotch = false
 
-    /// 仪表盘是否展开。**点击展开**、再点或移开鼠标收起；
-    /// 响铃开始时强制收起。悬停只放大提示，绝不自动展开 ——
-    /// 鼠标去够菜单栏是高频动作，路过不该弹出任何东西。
+    /// 仪表盘是否展开。**点击展开、再点收起** —— 对称的开关语义；
+    /// 响铃开始时强制收起。悬停只放大提示，绝不自动展开，
+    /// 鼠标移开也不自动收起：看盘时要边看图边瞟日历，面板不能
+    /// 因为鼠标回图表就消失。
     @State private var isExpanded = false
 
     /// 手型光标是否已入栈。push/pop 必须严格配对 ——
     /// 之前「点击停铃后手型残留」就是回调路径里漏了一次 pop。
     @State private var cursorPushed = false
+
+    /// 展开期间挂载的全局鼠标监听。全局 monitor 只报告发往**其他应用**
+    /// 的点击 —— 正是「面板外」的精确定义（面板内的点击走本窗口的
+    /// onTapGesture，不经过它）。挂/摘统一放在 isExpanded 的 onChange，
+    /// 任何展开/收起路径都不会漏。
+    @State private var outsideClickMonitor: Any?
 
     /// 悬停/点击行为的诊断通道。hover 是纯事件驱动、又依赖系统投递，
     /// 出问题时没有日志就只能瞎猜 —— debug 级别，默认零成本。
@@ -68,6 +75,11 @@ struct NotchView: View {
                     // 图标与数字分居刘海两侧：数字在设定的一边，图标在对侧。
                     // 这沿用了项目原有的语法（左槽图标、右槽数值），也让刘海
                     // 两边都有内容而不是一头沉。
+                    //
+                    // 展开时中间的刘海占位换成弹性空间（保底仍盖住物理刘海），
+                    // 图标和数字被推到岛的左右边缘 —— 顶排跟着岛一起向两边
+                    // 展开，而不是继续挤在刘海两侧。身份切换的占位是纯透明
+                    // 黑块，spring 事务里只看得到左右内容平滑滑开。
                     HStack(
                         spacing: 0
                     ) {
@@ -77,9 +89,17 @@ struct NotchView: View {
                             role: countdownDefaults.position == .left ? .digits : .icon
                         )
 
-                        OnlyNotchView(
-                            notchSize: notchViewModel.notchSize
-                        )
+                        if isExpanded {
+                            Spacer(minLength: 0)
+                                .frame(
+                                    minWidth: notchViewModel.notchSize.width,
+                                    minHeight: notchViewModel.notchSize.height
+                                )
+                        } else {
+                            OnlyNotchView(
+                                notchSize: notchViewModel.notchSize
+                            )
+                        }
 
                         CountdownView(
                             notchViewModel: notchViewModel,
@@ -87,6 +107,11 @@ struct NotchView: View {
                             role: countdownDefaults.position == .right ? .digits : .icon
                         )
                     }
+                    .padding(.horizontal, isExpanded ? 12 : 0)
+                    // 展开时顶排必须钉住面板总宽（内容 + 左右 padding）——
+                    // 中间是弹性 Spacer，而这棵子树挂在被提议全屏宽度的
+                    // 容器里，不钉宽 Spacer 会把整个形体撑成全屏横幅。
+                    .frame(width: isExpanded ? NotchDashboardView.contentWidth + 32 : nil)
 
                     // 点击展开的仪表盘。放在同一个 VStack 里，让黑色形体
                     // 「向下生长」而不是弹出第二个窗口 —— MewPanel 本来就
@@ -185,16 +210,11 @@ struct NotchView: View {
                     // 可点击（能展开或能收起）时给手型，明示「这里点得动」。
                     setPointer(hovering && (isExpanded || canExpandNow()))
 
-                    // 鼠标离开整个形体（含面板）即收起 —— 面板是瞬态的
-                    // 信息面板，不是要人记着关的窗口。
-                    if !hovering, isExpanded {
-                        Self.logger.debug("collapsing (pointer left)")
-                        withAnimation(Self.collapseAnimation) {
-                            isExpanded = false
-                        }
-                    }
+                    // 刻意不做「鼠标移开即收起」：看盘时要边看图边瞟日历，
+                    // 面板不能因为鼠标回图表就消失。收起的途径 —— 再点一次
+                    // 刘海（toggle）、响铃开始、设置里关掉仪表盘。
                 }
-                .help(alertPlayer.isAlerting ? "Click to stop the alert" : "")
+                .help(alertPlayer.isAlerting ? "点击停止响铃" : "")
 
                 Spacer()
             }
@@ -211,6 +231,26 @@ struct NotchView: View {
             notchDefaults.objectWillChange
         ) {
             notchViewModel.refreshNotchSize()
+        }
+        // 点击面板外的任何地方收起 —— 和系统菜单、弹出框同一条肌肉记忆。
+        .onChange(of: isExpanded) { _, expanded in
+            if expanded {
+                guard outsideClickMonitor == nil else { return }
+                outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
+                    matching: [.leftMouseDown, .rightMouseDown]
+                ) { _ in
+                    Task { @MainActor in
+                        guard isExpanded else { return }
+                        Self.logger.debug("collapsing (clicked outside)")
+                        withAnimation(Self.collapseAnimation) {
+                            isExpanded = false
+                        }
+                    }
+                }
+            } else if let monitor = outsideClickMonitor {
+                NSEvent.removeMonitor(monitor)
+                outsideClickMonitor = nil
+            }
         }
         // 响铃开始的瞬间强制收起：刘海必须立刻回到「一整块停止按钮」的
         // 单一语义，不能一半是仪表盘、一半是警报。

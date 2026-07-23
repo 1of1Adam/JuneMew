@@ -178,7 +178,10 @@ struct CountdownView: View {
                         )
                 }
 
-            concernDot(countdown.concerns)
+            // 关切点（假期表未核对/时钟未验证的小圆点）已从折叠态移除：
+            // 4pt 的点解释不了自己，反而成了常驻的视觉噪声。同样的信息
+            // 完整地住在设置页 Diagnostics；真正致命的问题仍走 fault 路径
+            // 在刘海上显示告警字形。
         }
         .offset(y: baselineNudge)
             // 数字硬切。明确否决 .contentTransition(.numericText)：
@@ -192,48 +195,6 @@ struct CountdownView: View {
             .animation(.easeInOut(duration: 0.25), value: countdown.phase)
     }
 
-    @ViewBuilder
-    private func concernDot(_ concerns: [Concern]) -> some View {
-        if let severity = concernSeverity(concerns) {
-            Circle()
-                .fill(severity)
-                .frame(width: 4, height: 4)
-                .help(concernTooltip(concerns))
-        }
-    }
-
-    /// 琥珀 > 灰。没有关切项时不画点。
-    private func concernSeverity(_ concerns: [Concern]) -> Color? {
-        guard !concerns.isEmpty else { return nil }
-
-        for concern in concerns {
-            switch concern {
-            case .clockDrift, .holidayTableStale, .holidayTableUnverified:
-                return MewNotch.CountdownColors.concernAmber
-            case .holidayTableExpiringSoon, .clockUnverified:
-                continue
-            }
-        }
-        return MewNotch.CountdownColors.concernGray
-    }
-
-    private func concernTooltip(_ concerns: [Concern]) -> String {
-        concerns.map { concern in
-            switch concern {
-            case let .clockDrift(seconds):
-                return String(format: "System clock is off by %+.1fs", seconds)
-            case let .clockUnverified(staleness):
-                return "Clock not verified for \(Int(staleness / 3600))h"
-            case let .holidayTableExpiringSoon(daysLeft):
-                return "Holiday table expires in \(daysLeft) days"
-            case let .holidayTableStale(daysStale):
-                return "Holiday table expired \(daysStale) days ago"
-            case .holidayTableUnverified:
-                return "Holiday table has not been verified against the exchange calendar"
-            }
-        }
-        .joined(separator: "\n")
-    }
 
     // MARK: - 故障
 

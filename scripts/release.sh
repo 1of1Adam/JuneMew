@@ -27,6 +27,14 @@ BUILD=$(sed -n 's/.*CURRENT_PROJECT_VERSION = \(.*\);/\1/p' MewNotch.xcodeproj/p
 echo "==> 发布 JuneMew ${VERSION} (build ${BUILD})"
 
 # ── 1. 构建 ──────────────────────────────────────────────────────────
+# 密钥注入：把本机 DeepSeek key 混淆后写进 bundle 资源（gitignore，
+# 永不进 git）。key 文件不存在时跳过，翻译功能不启用。
+scripts/gen-secrets.sh
+
+# 先杀掉从 build 目录启动的实例：运行中的进程占用二进制会让构建收尾
+# （签名/链接）静默失败。只匹配 build 路径，不动 /Applications 里的正式版。
+pkill -f "build/Build/Products/Release/JuneMew.app" 2>/dev/null || true
+
 xcodebuild -project MewNotch.xcodeproj -scheme MewNotch \
     -configuration Release -derivedDataPath build build -quiet
 APP="build/Build/Products/Release/JuneMew.app"
@@ -49,9 +57,16 @@ mkdir -p dist/stage
 ditto "$APP" dist/stage/JuneMew.app
 hdiutil create -volname "JuneMew ${VERSION}" -srcfolder dist/stage -ov -format UDZO "$DMG" -quiet
 
-# ── 3. ed25519 签名(私钥从 Keychain 读取)──────────────────────────
+# ── 3. ed25519 签名 ──────────────────────────────────────────────────
+# 用导出的私钥文件而不是 Keychain：钥匙串每次读取都会弹授权框等人工
+# 输入，发版脚本必须能无人值守跑完。文件不存在时回落 Keychain。
 SPARKLE_BIN="build/SourcePackages/artifacts/sparkle/Sparkle/bin"
-SIG_OUTPUT=$("$SPARKLE_BIN/sign_update" "$ZIP")
+KEY_FILE="$HOME/Documents/JuneMew-sparkle-private-key.pem"
+if [ -f "$KEY_FILE" ]; then
+    SIG_OUTPUT=$("$SPARKLE_BIN/sign_update" -f "$KEY_FILE" "$ZIP")
+else
+    SIG_OUTPUT=$("$SPARKLE_BIN/sign_update" "$ZIP")
+fi
 ED_SIGNATURE=$(echo "$SIG_OUTPUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
 LENGTH=$(echo "$SIG_OUTPUT" | sed -n 's/.*length="\([^"]*\)".*/\1/p')
 [ -n "$ED_SIGNATURE" ] || { echo "签名失败: $SIG_OUTPUT"; exit 1; }

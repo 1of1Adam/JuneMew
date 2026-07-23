@@ -119,6 +119,48 @@ class CountdownDefaults: ObservableObject {
     }
 
 
+    /// 仪表盘里的经济日历。默认开 —— 数据发布时刻正是「这根 K 线为什么
+    /// 突然拉长」的答案，和倒计时是同一件事的两面。
+    /// 关掉后不再有任何对 TradingView 日历端点的网络请求。
+    @PrimitiveUserDefault(
+        PREFIX + "CalendarEnabled",
+        defaultValue: true
+    )
+    var calendarEnabled: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
+    /// 日历重要度档位，存 `EconomicImportance` 的 rawValue（-1 全部 / 0 中高 / 1 仅高）。
+    /// 默认 0：low 档全是 MBA 周报之类的噪音，high-only 又会把 PMI 这类
+    /// 盘中真会动价的中档数据滤掉。
+    @PrimitiveUserDefault(
+        PREFIX + "CalendarMinImportance",
+        defaultValue: 0
+    )
+    var calendarMinImportance: Int {
+        didSet { self.objectWillChange.send() }
+    }
+
+    /// 仪表盘里的快讯流（FinancialJuice）。关掉后不再有任何对
+    /// 新闻端点的网络请求。
+    @PrimitiveUserDefault(
+        PREFIX + "NewsEnabled",
+        defaultValue: true
+    )
+    var newsEnabled: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
+    /// 快讯标题中文化（DeepSeek）。构建未注入 key 时此开关无效，
+    /// 始终显示英文原文。
+    @PrimitiveUserDefault(
+        PREFIX + "NewsTranslationEnabled",
+        defaultValue: true
+    )
+    var newsTranslationEnabled: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
     @PrimitiveUserDefault(
         PREFIX + "WarningThreshold",
         defaultValue: 60

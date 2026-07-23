@@ -17,8 +17,8 @@ struct CountdownSettingsView: View {
         Form {
             Section {
                 SettingsRow(
-                    title: "Enabled",
-                    subtitle: "Show the bar countdown on the notch",
+                    title: "启用",
+                    subtitle: "在刘海上显示 K 线收线倒计时",
                     icon: MewNotch.Assets.icCandle,
                     color: MewNotch.Colors.countdown
                 ) {
@@ -26,8 +26,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Period",
-                    subtitle: "CME Globex futures (ES / NQ / MES / MNQ)",
+                    title: "周期",
+                    subtitle: "CME Globex 期货（ES / NQ / MES / MNQ）",
                     icon: MewNotch.Assets.icTimer,
                     color: MewNotch.Colors.timer
                 ) {
@@ -54,8 +54,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Position",
-                    subtitle: "Right sits next to the status icons, which you can rearrange",
+                    title: "位置",
+                    subtitle: "右侧紧邻菜单栏状态图标",
                     icon: MewNotch.Assets.icPosition,
                     color: MewNotch.Colors.notch
                 ) {
@@ -70,10 +70,10 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Show Period Label",
+                    title: "显示周期标签",
                     subtitle: defaults.showPeriodLabel
-                        ? "Renders \"\(defaults.period.displayName) 04:32\""
-                        : "Renders \"04:32\"",
+                        ? "显示为 \"\(defaults.period.displayName) 04:32\""
+                        : "显示为 \"04:32\"",
                     icon: MewNotch.Assets.icLabel,
                     color: MewNotch.Colors.general
                 ) {
@@ -81,9 +81,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Show Icon",
-                    subtitle: "Sits on the \(defaults.position.opposite.displayName.lowercased()) "
-                        + "side, opposite the digits",
+                    title: "显示图标",
+                    subtitle: "位于数字对侧，让刘海两边平衡",
                     icon: Image(systemName: CountdownIcon.systemName),
                     color: MewNotch.Colors.countdown
                 ) {
@@ -100,9 +99,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Notch Dashboard",
-                    subtitle: "Hovering highlights the notch; clicking it opens every period, "
-                        + "session info and quick controls",
+                    title: "刘海仪表盘",
+                    subtitle: "悬停放大提示，点击展开全周期矩阵、经济日历与快讯",
                     icon: MewNotch.Assets.icHover,
                     color: MewNotch.Colors.hover
                 ) {
@@ -110,13 +108,13 @@ struct CountdownSettingsView: View {
                 }
 
             } header: {
-                Text("Countdown")
+                Text("倒计时")
             }
 
             Section {
                 SettingsRow(
-                    title: "Warning",
-                    subtitle: "Turns amber with \(defaults.warningThreshold)s left",
+                    title: "警告",
+                    subtitle: "剩 \(defaults.warningThreshold) 秒时变琥珀色",
                     icon: MewNotch.Assets.icPaintbrush,
                     color: MewNotch.Colors.height
                 ) {
@@ -130,8 +128,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Urgent",
-                    subtitle: "Turns red and glows with \(defaults.urgentThreshold)s left",
+                    title: "紧急",
+                    subtitle: "剩 \(defaults.urgentThreshold) 秒时变橙红并发辉光",
                     icon: MewNotch.Assets.icWarning,
                     color: MewNotch.Colors.alert
                 ) {
@@ -144,18 +142,84 @@ struct CountdownSettingsView: View {
                     .labelsHidden()
                 }
             } header: {
-                Text("Thresholds")
+                Text("阈值")
             } footer: {
-                Text("Absolute seconds, not a share of the period — your reaction window "
-                     + "doesn't shrink just because the bar is shorter.")
+                Text("绝对秒数而非周期比例 —— 反应窗口不随 K 线变短而缩水。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
 
             Section {
                 SettingsRow(
-                    title: "Play Sound",
-                    subtitle: "A 5m period fires roughly 288 times per session",
+                    title: "经济日历",
+                    subtitle: "仪表盘里显示美国数据（CPI、非农、FOMC…），预期与实际值实时更新",
+                    icon: MewNotch.Assets.icCalendar,
+                    color: MewNotch.Colors.session
+                ) {
+                    Toggle("", isOn: $defaults.calendarEnabled)
+                }
+
+                if defaults.calendarEnabled {
+                    SettingsRow(
+                        title: "重要度",
+                        subtitle: importanceSubtitle,
+                        icon: MewNotch.Assets.icWarning,
+                        color: MewNotch.Colors.alert
+                    ) {
+                        Picker("", selection: $defaults.calendarMinImportance) {
+                            Text("全部").tag(-1)
+                            Text("中高").tag(0)
+                            Text("高").tag(1)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(width: 160)
+                    }
+                }
+            } header: {
+                Text("经济日历")
+            } footer: {
+                Text("时刻表与数值来自 TradingView 公开经济日历，每 20 分钟刷新一次，"
+                     + "数据发布后即时补拉。关闭后完全停止相关网络请求。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
+                SettingsRow(
+                    title: "快讯",
+                    subtitle: "仪表盘里显示 FinancialJuice 快讯，每分钟轮询",
+                    icon: MewNotch.Assets.icGlobe,
+                    color: MewNotch.Colors.general
+                ) {
+                    Toggle("", isOn: $defaults.newsEnabled)
+                }
+
+                if defaults.newsEnabled {
+                    SettingsRow(
+                        title: "中文化",
+                        subtitle: NewsStore.translationAvailable
+                            ? "快讯标题与日历指标名由 DeepSeek 译写，悬停可看英文原文"
+                            : "此构建不可用 — 未注入 API key",
+                        icon: MewNotch.Assets.icLabel,
+                        color: MewNotch.Colors.timer
+                    ) {
+                        Toggle("", isOn: $defaults.newsTranslationEnabled)
+                            .disabled(!NewsStore.translationAvailable)
+                    }
+                }
+            } header: {
+                Text("快讯")
+            } footer: {
+                Text("快讯来自 FinancialJuice 公开信息流。关闭后完全停止相关网络请求。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
+                SettingsRow(
+                    title: "收线响铃",
+                    subtitle: "5 分钟周期每个交易日约响 288 次",
                     icon: MewNotch.Assets.icBell,
                     color: MewNotch.Colors.alert
                 ) {
@@ -164,7 +228,7 @@ struct CountdownSettingsView: View {
 
                 if defaults.soundEnabled {
                     SettingsRow(
-                        title: "Sound",
+                        title: "铃声",
                         icon: MewNotch.Assets.icAudio,
                         color: MewNotch.Colors.audio
                     ) {
@@ -179,7 +243,7 @@ struct CountdownSettingsView: View {
 
                             // 试听永远只响一次，不受 Alert Mode 影响 ——
                             // 点「试听」结果开始无限循环会很吓人。
-                            Button("Test") {
+                            Button("试听") {
                                 CandleAlertPlayer.shared.play(
                                     named: defaults.soundName,
                                     repeating: false
@@ -189,10 +253,10 @@ struct CountdownSettingsView: View {
                     }
 
                     SettingsRow(
-                        title: "Alert Mode",
+                        title: "响铃模式",
                         subtitle: defaults.alertMode == .once
-                            ? "One beep per bar"
-                            : "Keeps ringing until you stop it from the menu bar icon",
+                            ? "每根 K 线响一声"
+                            : "持续响铃，直到点击刘海或菜单栏图标停止",
                         icon: MewNotch.Assets.icBell,
                         color: MewNotch.Colors.alert
                     ) {
@@ -206,8 +270,8 @@ struct CountdownSettingsView: View {
                     }
 
                     SettingsRow(
-                        title: "Alert At",
-                        subtitle: "\(defaults.soundThreshold)s before the bar closes",
+                        title: "响铃时机",
+                        subtitle: "收线前 \(defaults.soundThreshold) 秒",
                         icon: MewNotch.Assets.icTimer,
                         color: MewNotch.Colors.timer
                     ) {
@@ -225,18 +289,15 @@ struct CountdownSettingsView: View {
                     if defaults.alertMode == .untilDismissed {
                         VStack(alignment: .leading, spacing: 6) {
                             Label {
-                                Text("**Click the notch to stop it.** The notch turns into a "
-                                     + "stop button while ringing — it sits at the top edge of "
-                                     + "the screen, so flicking the pointer upwards always hits it.")
+                                Text("**点击刘海即可停止。** 响铃时整个刘海就是停止按钮 —— "
+                                     + "它贴着屏幕顶边，鼠标向上一甩必中。")
                             } icon: {
                                 Image(systemName: "hand.tap.fill")
                             }
                             .foregroundStyle(.primary)
 
-                            Text("The menu bar icon becomes a bell and also stops it. "
-                                 + "The sound stops on its own when the market closes, when you "
-                                 + "turn the countdown off, or if the clock becomes unreliable — "
-                                 + "but it will not stop just because the bar closed.")
+                            Text("菜单栏图标此时变为响铃标志，点击同样可停。休市、关闭倒计时、"
+                                 + "时钟不可信时会自动停止 —— 但不会仅因 K 线收线而自动停。")
                             .foregroundStyle(.secondary)
                         }
                         .font(.caption)
@@ -246,7 +307,7 @@ struct CountdownSettingsView: View {
                     }
                 }
             } header: {
-                Text("Sound")
+                Text("声音")
             }
 
             Section {
@@ -279,8 +340,8 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Verify System Clock",
-                    subtitle: "Compares against two HTTPS endpoints every 30 minutes",
+                    title: "校验系统时钟",
+                    subtitle: "每 30 分钟对照两个 HTTPS 端点",
                     icon: MewNotch.Assets.icClockCheck,
                     color: MewNotch.Colors.session
                 ) {
@@ -288,21 +349,21 @@ struct CountdownSettingsView: View {
                 }
 
                 SettingsRow(
-                    title: "Clock Status",
+                    title: "时钟状态",
                     subtitle: clockStatusText,
                     icon: MewNotch.Assets.icGlobe,
                     color: MewNotch.Colors.diagnostics
                 )
 
                 SettingsRow(
-                    title: "Session",
+                    title: "交易时段",
                     subtitle: engine.todaySessionDescription,
                     icon: MewNotch.Assets.icMoon,
                     color: MewNotch.Colors.session
                 )
 
                 SettingsRow(
-                    title: "Holiday Table",
+                    title: "假期表",
                     subtitle: holidayTableText,
                     icon: MewNotch.Assets.icCalendar,
                     color: MewNotch.Colors.diagnostics
@@ -319,10 +380,10 @@ struct CountdownSettingsView: View {
                     .padding(.leading, 44)
                 }
             } header: {
-                Text("Diagnostics")
+                Text("诊断")
             } footer: {
-                Text("Bar boundaries are anchored to the session open (18:00 ET), not to UTC "
-                     + "midnight. Compare against your charting platform if anything looks off.")
+                Text("K 线边界锚定在时段开盘（18:00 ET）而非 UTC 零点。"
+                     + "若有出入，请以你的交易平台为准。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
@@ -394,6 +455,16 @@ struct CountdownSettingsView: View {
         }
 
         return nil
+    }
+
+    // MARK: - 日历文案
+
+    private var importanceSubtitle: String {
+        switch defaults.calendarMinImportance {
+        case ..<0: return "全部显示，包括每周例行小数据"
+        case 0: return "隐藏例行小数据，保留会动市场的"
+        default: return "只看大事 —— CPI、非农、FOMC、GDP"
+        }
     }
 
     // MARK: - Diagnostics 文案
