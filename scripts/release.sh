@@ -46,8 +46,7 @@ PLIST_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "
 # ── 2. 打包: zip 给 Sparkle,DMG 给首次安装 ─────────────────────────
 mkdir -p dist
 ZIP="dist/JuneMew-${VERSION}.zip"
-DMG="dist/JuneMew-${VERSION}.dmg"
-rm -f "$ZIP" "$DMG"
+rm -f "$ZIP"
 
 ditto -c -k --keepParent "$APP" "$ZIP"
 
@@ -57,7 +56,17 @@ mkdir -p dist/stage
 ditto "$APP" dist/stage/JuneMew.app
 # macOS 26 起 hdiutil create 已不可用（报 No such file or directory），
 # 必须用 diskutil 的新命令。发现于 1.3 发版：脚本静默死在这一步。
+#
+# DMG 产出到临时目录而不是 dist/：dist/ 下的 DMG 路径被 1.3 发版时
+# hdiutil 失败遗留的僵尸清理盯上 —— 文件落地数秒内被异步删除，而
+# diskutil 退出码仍是 0，v1.4 发版就这样静默丢了 DMG 直到 gh 上传才
+# 报错。临时目录不背这个诅咒；文件名保持正确，gh 的 asset 名跟文件走。
+DMG_DIR=$(mktemp -d)
+DMG="$DMG_DIR/JuneMew-${VERSION}.dmg"
 diskutil image create from dist/stage "$DMG" --format UDZO --volumeName "JuneMew ${VERSION}" > /dev/null
+# diskutil 成功退出不等于文件还在（见上）—— 上传前必须亲眼确认。
+sleep 3
+[ -f "$DMG" ] || { echo "DMG 未产出或已被异步清理: $DMG"; exit 1; }
 
 # ── 3. ed25519 签名 ──────────────────────────────────────────────────
 # 用导出的私钥文件而不是 Keychain：钥匙串每次读取都会弹授权框等人工
