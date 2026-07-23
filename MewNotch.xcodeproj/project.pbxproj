@@ -11,6 +11,7 @@
 		253243BE2E09A6220030EC15 /* DisplayServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E05A76E2D7D93A900980012 /* DisplayServices.framework */; };
 		253243C32E09A6240030EC15 /* SkyLight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 253243AF2E09A1AA0030EC15 /* SkyLight.framework */; };
 		25F325642ED64870001C93C0 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 25F325632ED64870001C93C0 /* LaunchAtLogin */; };
+		258F12A22F01D5D100CA507F /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 258F12A12F01D5D100CA507F /* Sparkle */; };
 		KL1NE00000000000000000A3 /* KLineCore in Frameworks */ = {isa = PBXBuildFile; productRef = KL1NE00000000000000000A2 /* KLineCore */; };
 /* End PBXBuildFile section */
 
@@ -62,6 +63,7 @@
 				251798DC2F126FFF0050B370 /* MacroVisionKit in Frameworks */,
 				KL1NE00000000000000000A3 /* KLineCore in Frameworks */,
 				25F325642ED64870001C93C0 /* LaunchAtLogin in Frameworks */,
+				258F12A22F01D5D100CA507F /* Sparkle in Frameworks */,
 				253243BE2E09A6220030EC15 /* DisplayServices.framework in Frameworks */,
 				253243C32E09A6240030EC15 /* SkyLight.framework in Frameworks */,
 			);
@@ -120,6 +122,7 @@
 				25F325632ED64870001C93C0 /* LaunchAtLogin */,
 				251798DB2F126FFF0050B370 /* MacroVisionKit */,
 				KL1NE00000000000000000A2 /* KLineCore */,
+				258F12A12F01D5D100CA507F /* Sparkle */,
 			);
 			productName = MewNotch;
 			productReference = 9EA41D872D6DEACA00817679 /* MewNotch.app */;
@@ -154,6 +157,7 @@
 				250A20732ED646DB00FBAF0C /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 				251798DA2F126FFF0050B370 /* XCRemoteSwiftPackageReference "MacroVisionKit" */,
 				KL1NE00000000000000000A1 /* XCLocalSwiftPackageReference "KLineCore" */,
+				258F12A02F01D5D100CA507F /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9EA41D882D6DEACA00817679 /* Products */;
@@ -314,7 +318,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8P4JUS3B5W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -335,9 +339,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.monuk7735.mew.notch;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.1of1adam.JuneMew;
+				PRODUCT_NAME = JuneMew;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -355,7 +359,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8P4JUS3B5W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -376,9 +380,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.monuk7735.mew.notch;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.1of1adam.JuneMew;
+				PRODUCT_NAME = JuneMew;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks";
@@ -432,6 +436,14 @@
 				minimumVersion = 0.1.0;
 			};
 		};
+		258F12A02F01D5D100CA507F /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -448,6 +460,11 @@
 		KL1NE00000000000000000A2 /* KLineCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KLineCore;
+		};
+		258F12A12F01D5D100CA507F /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 258F12A02F01D5D100CA507F /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

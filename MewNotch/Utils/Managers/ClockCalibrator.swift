@@ -22,7 +22,7 @@ actor ClockCalibrator {
 
     static let shared = ClockCalibrator()
 
-    private let logger = Logger(subsystem: "com.monuk7735.mew.notch", category: "clock")
+    private let logger = Logger(subsystem: "io.github.1of1adam.JuneMew", category: "clock")
 
     /// 两个独立的高可用端点。互相矛盾时判 unverified 而不取平均。
     private let endpoints = [

@@ -16,7 +16,7 @@ final class CandleAlertPlayer: NSObject, ObservableObject {
 
     static let shared = CandleAlertPlayer()
 
-    private let logger = Logger(subsystem: "com.monuk7735.mew.notch", category: "alert")
+    private let logger = Logger(subsystem: "io.github.1of1adam.JuneMew", category: "alert")
 
     /// 正在持续响铃。UI 据此显示「停止」入口 ——
     /// 一个停不掉的循环提示音是灾难，停止入口必须始终可达。

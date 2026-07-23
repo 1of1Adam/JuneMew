@@ -49,7 +49,7 @@ final class CountdownEngine: ObservableObject {
     @Published private(set) var clockTrust: ClockTrust = .unverified(since: Date(), lastError: "starting up")
     @Published private(set) var todaySessionDescription: String = "—"
 
-    private let logger = Logger(subsystem: "com.monuk7735.mew.notch", category: "countdown")
+    private let logger = Logger(subsystem: "io.github.1of1adam.JuneMew", category: "countdown")
 
     private let defaults = CountdownDefaults.shared
     private let scheduler: TickScheduler = SecondAlignedTickScheduler()

@@ -20,6 +20,7 @@ struct NotchOptionsView: View {
     @ObservedObject private var appDefaults = AppDefaults.shared
     @ObservedObject private var countdownDefaults = CountdownDefaults.shared
     @ObservedObject private var alertPlayer = CandleAlertPlayer.shared
+    @ObservedObject private var updaterManager = UpdaterManager.shared
 
     var type: OptionsType = .ContextMenu
 
@@ -56,6 +57,11 @@ struct NotchOptionsView: View {
             NotchManager.shared.refreshNotches(killAllWindows: true)
         }
         .keyboardShortcut("R", modifiers: .command)
+
+        Button("Check for Updates…") {
+            updaterManager.checkForUpdates()
+        }
+        .disabled(!updaterManager.canCheckForUpdates)
 
         Button("Settings") {
             openSettings()

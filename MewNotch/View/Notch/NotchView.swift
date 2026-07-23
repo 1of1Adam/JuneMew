@@ -35,7 +35,7 @@ struct NotchView: View {
 
     /// 悬停/点击行为的诊断通道。hover 是纯事件驱动、又依赖系统投递，
     /// 出问题时没有日志就只能瞎猜 —— debug 级别，默认零成本。
-    private static let logger = Logger(subsystem: "com.monuk7735.mew.notch", category: "hover")
+    private static let logger = Logger(subsystem: "io.github.1of1adam.JuneMew", category: "hover")
 
     // MARK: - 动效参数
 

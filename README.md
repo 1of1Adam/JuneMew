@@ -1,142 +1,78 @@
-<img src=".github/res/MewNotch-Logo.png" width="200" alt="App icon" align="left"/>
+# JuneMew
 
-<div>
-<h3 style="font-size: 2.5rem; letter-spacing: 1px;">MewNotch</h3>
-<p style="font-size: 1.15rem; font-weight: 500;">
-    <strong>Make the Mac Notch Actually Useful!</strong><br>
-    MewNotch is a free, open-source macOS app that transforms the notch into a customizable HUD for brightness, volume, power, and more. Minimal, beautiful, and privacy-friendly.
-  </p>
+**MacBook 刘海上的 CME 期货 K 线收线倒计时。**
 
-<br/><br/>
+盯盘时最贵的注意力错误之一：回头看图才发现这根 5 分钟 K 线已经收了。JuneMew 把「这根 K 线还剩多久」常驻在刘海两侧 —— 视线不用离开图表，余光就能读到；收线前变色、可选响铃，离开屏幕也叫得回来。
 
-<div align="center">
+- **K 线倒计时** — 1m / 3m / 5m / 15m / 30m / 1H，按 CME Globex 时段锚定（18:00 ET），与 TradingView 的 K 线边界一致
+- **相位变色** — 常态白、警告琥珀、紧急橙红加辉光；亮度阶梯对所有色觉类型有效
+- **收线响铃** — 提前 N 秒响，支持「响到手动关闭」模式；响铃时整个刘海就是停止按钮
+- **刘海仪表盘** — 悬停放大提示，点击展开：全周期倒计时矩阵（点卡片切周期）、今日时段、距收盘、时钟状态、声音开关；休市时显示下次开盘
+- **交易日历** — 内置 CME Equity Index 假期表（全天休市 / 提前收盘 / 延后开盘），表过期会告警而不是装作没事
+- **时钟可信度** — 联网校准系统时钟 + 阶跃哨兵；时钟不可信时**拒绝显示数字**——一个不能相信的倒计时比没有更危险
+- **自动更新** — Sparkle 2 + ed25519 签名，不依赖苹果签名体系
 
-[![GitHub License](https://img.shields.io/github/license/monuk7735/mew-notch)](LICENSE)
-  [![Downloads](https://img.shields.io/github/downloads/monuk7735/mew-notch/total.svg)](https://github.com/monuk7735/mew-notch/releases)
-  [![Issues](https://img.shields.io/github/issues/monuk7735/mew-notch.svg)](https://github.com/monuk7735/mew-notch/issues)
-  [![Pull Requests](https://img.shields.io/github/issues-pr/monuk7735/mew-notch.svg)](https://github.com/monuk7735/mew-notch/pulls)
-  [![macOS Version](https://img.shields.io/badge/macOS-14.0%2B-blue.svg)](https://www.apple.com/macos/)
-  <!-- [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/MewNotch?style=flat&label=Join%20r%2FMewNotch)](https://www.reddit.com/r/MewNotch/) -->
+克制是刻意的：常态下一切静止（数字硬切、图标不动、鼠标划过无反应），运动只留给真正需要打断注意力的时刻。
 
-<br/>
+## 安装
 
-<a href="https://github.com/monuk7735/mew-notch/releases"><img src=".github/res/macOS-Download.png" width="160" alt="Download for macOS"/></a>
+从 [Releases](https://github.com/1of1Adam/JuneMew/releases) 下载最新 DMG，拖入 Applications。
 
-<br/>
+**首次启动会被 Gatekeeper 拦截**（本项目没有 Apple Developer 账号，未做公证）：
 
-<img src=".github/res/Screenshot.png" width="100%" alt="MewNotch Preview"/><br/>
-
-</div>
-
-<hr>
-
-## Features
-
-- **Brightness Display** - Displays brightness adjustments in real-time, including optional auto-brightness changes and custom step sizes.
-- **Sound Level Display** - Shows input/output volume changes directly on the notch with customizable step sizes.
-- **System HUD Suppression** - Option to completely hide the stock macOS HUDs for a cleaner experience.
-- **File Shelf** - Drag and drop files to the notch for quick access. **Now with Persistence!** Files stay there even after restarts.
-- **Power State** - Show current power source. Toggle "Time Remaining" display for a cleaner look.
-- **Notch on Lock Screen** - The notch HUD is now visible even on the macOS lock screen.
-- **Now Playing** - Control now playing media directly from notch. Shows title changes automatically with customizable pop-up timeouts.
-- **Mirror** - Get a quick peek on how you're looking by using the mirror in expanded notch. Now with customizable corner radius.
-- **Bash Script View** - Run and display bash commands directly in the expanded notch.
-- **Customizable Interactions** - Tailor the notch exactly to your liking with adjustable hover expand delays and toggles for HUD animations.
-- **Custom Layout** - Reorder notch items to suit your workflow.
-- **Auto Updates** - Built-in updater (Sparkle) to keep your app always up to date.
-- **Modern Settings UI** - Completely grouped and redesigned settings experience for beautifully categorized configuration across all HUDs.
-- **Fully Custom Notch Experience** - Choose the displays you want to see the notch on.
-- **SwiftUI-based UI** - Smooth animations and modern macOS styling.
-
-## Installation
-
-### Homebrew
+1. 打开 **系统设置 → 隐私与安全性**，在 Security 一节找到 "JuneMew was blocked…"，点 **Open Anyway**；或
+2. 终端执行（macOS 26+ 的 `xattr` 已移除 `-r`，这是跨版本兼容写法）：
 
 ```bash
-brew install --cask monuk7735/tap/mew-notch
+find /Applications/JuneMew.app -print0 | xargs -0 xattr -d com.apple.quarantine 2>/dev/null
 ```
 
-### Manual Download
+只需放行这一次 —— 之后的版本由内置更新器分发，更新包不带 quarantine 标记，不会再弹「已损坏」。
 
-1. Download the latest release from [GitHub Releases](https://github.com/monuk7735/mew-notch/releases).
-2. Move the app to the Applications folder.
-3. Run the app and grant necessary permissions if prompted.
+## 自动更新的安全模型
 
+没有 Apple Developer 账号，更新链路不经过苹果签名体系：
 
-### ⚠️ "Damaged" or "Unidentified Developer" Error?
+- 每个更新包发布前用**本机保管的 ed25519 私钥**签名（Sparkle `sign_update`）
+- App 内嵌对应公钥（`SUPublicEDKey`），下载后验签通过才安装
+- appcast 与更新包全程 HTTPS（GitHub）
 
-> I don't have an Apple Developer account yet, so the application will display a popup on the first launch.
+菜单栏图标 → **Check for Updates…** 手动检查；设置 → General → Updates 可关闭每日自动检查。
 
-**Option 1 (Recommended): Allow via System Settings**
-
-1. Open **System Settings** → **Privacy & Security**.
-2. Scroll down to the **Security** section.
-3. Look for "**MewNotch** was blocked..." and click **Open Anyway**.
-4. Click **Open** in the confirmation popup.
-
-**Option 2 (Advanced): Run this command in Terminal**
+## 构建
 
 ```bash
-xattr -cr /Applications/MewNotch.app
+git clone https://github.com/1of1Adam/JuneMew.git
+cd JuneMew
+xcodebuild -project MewNotch.xcodeproj -scheme MewNotch -configuration Release build
 ```
 
-This command simply removes the "quarantine" flag that macOS places on apps downloaded from the internet, resolving the false error.
+要求 macOS 15.2+，Xcode 26+。领域层 `KLineCore`（交易时段 / 假期表 / K 线定位 / 时钟可信度）是独立 SPM 包，带 35+ 单元测试：
 
-- `xattr` : The utility to modify file attributes.
-- `-c` : Clears all attributes (removes the "quarantine" flag).
-- `-r` : Recursive (applies to all files inside the app bundle).
+```bash
+cd KLineCore && swift test
+```
 
-## Usage
+发版流程见 `scripts/release.sh`。
 
+## 数据与隐私
 
-1. Launch **MewNotch**.
-2. Re-launch to open settings, if required. Notch won't appear at first launch on non-notched devices.
-3. Adjust the volume or brightness using Keyboard or Touch Bar.
-4. Customise the settings to have notch on different or all monitors.
-5. Enjoy the sleek visual feedback right on the notch!
+全部计算在本地。仅有的网络请求：时钟校准（向两个 HTTPS 端点发 HEAD 读 `Date` 响应头，可在设置中关闭）和 Sparkle 更新检查（可关闭）。无统计、无追踪。
 
-## Roadmap
+## 已知限制
 
-- [x] ~~Add support for different types of HUD UIs.~~
-- [x] ~~Allow users to toggle usage of each HUD variant.~~
-- [x] ~~Icon in Menu bar to show app's running status.~~
-- [x] ~~Add Touch bar support.~~
-- [x] ~~Now playing music HUD.~~
-- [x] ~~Actions on Now Playing HUD. Hover to see magic.~~
-- [x] ~~Now Playing Detail on Expanded Notch View.~~
-- [x] ~~Expand notch on hover.~~
-- [x] ~~Mirror View~~
-- [x] ~~Complete Control over which monitor shows the notch~~
-- [x] ~~Explore different options for Now Playing media support on macOS 15.4 and above.~~
-- [x] ~~Shelf for files in expanded notch view~~
-- [x] ~~Persist Shelf Files across restarts~~
-- [ ] Making shelf work with **Show on Lockscreen** enabled (Currently mutually exclusive for security).
-- [ ] HUD for displaying keyboard backlight changes.
-- [ ] Explore additional notch-based utilities.
+- 假期表覆盖 2026–2027，状态为 `unverified_draft`（日期经算法交叉验证，但「全天休市 vs 提前收盘」及具体时刻尚未逐条对照 CME 官方日历）——刘海上的琥珀点即此告警
+- 4H 周期未开放：TradingView 对 CME 4H K 线的锚点未实测确认前不上线错的东西
+- 仅在有物理刘海的屏幕上显示（设置里可强制在所有屏幕模拟）
 
-## Dependency
-- [Lottie](https://github.com/airbnb/lottie-ios)
-- [LaunchAtLogin-Modern](https://github.com/sindresorhus/LaunchAtLogin-Modern)
-- [SwiftyJSON](https://github.com/SwiftyJSON/SwiftyJSON)
-- [Sparkle](https://github.com/sparkle-project/Sparkle)
-- [MacroVisionKit](https://github.com/TheBoredTeam/MacroVisionKit)
+## 致谢与许可
 
-## Contributing
+Fork 自 [monuk7735/mew-notch](https://github.com/monuk7735/mew-notch)（通用刘海 HUD 工具），砍掉全部 HUD 功能后重建为专用交易工具，刘海窗口基建沿用原项目。
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+依赖：[Sparkle](https://github.com/sparkle-project/Sparkle) · [LaunchAtLogin-Modern](https://github.com/sindresorhus/LaunchAtLogin-Modern) · [MacroVisionKit](https://github.com/TheBoredTeam/MacroVisionKit)
 
-## License
+License: [GPLv3](LICENSE)（延续自原项目）
 
-This project is licensed under the [GPLv3 License](LICENSE).
+---
 
-## Acknowledgments
-
-- Inspired by the idea of making the Mac notch actually useful!
-- Built with ♥️ using Swift and SwiftUI.
-- Some parts built with 😭 using Objective-C for system integration.
-- Special thanks to the following GitHub repositories for their code and inspiration:
-  - [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)
-  - [SlimHUD](https://github.com/AlexPerathoner/SlimHUD)
-  - [SkyLightWindow](https://github.com/Lakr233/SkyLightWindow)
-  - [EnergyBar](https://github.com/billziss-gh/EnergyBar)
-  - [boring.notch](https://github.com/TheBoredTeam/boring.notch)
+*本工具只做时间提醒，不构成任何交易建议。K 线边界以你的交易平台为准。*

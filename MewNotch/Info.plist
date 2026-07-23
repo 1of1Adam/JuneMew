@@ -2,5 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Sparkle 自动更新。appcast 与更新包托管在 GitHub，
+	     更新包由本机保管的 ed25519 私钥签名（无 Apple Developer 账号，
+	     不依赖苹果签名体系）。私钥丢失 = 永远无法再发更新，务必备份。 -->
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/1of1Adam/JuneMew/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>82Z+g9c13wWVl5fJKbu8+wBBDEQ3oZEWMvJxznf3/zI=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

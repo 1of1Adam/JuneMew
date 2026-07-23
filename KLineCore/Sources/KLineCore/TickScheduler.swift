@@ -42,7 +42,7 @@ public final class SecondAlignedTickScheduler: TickScheduler, @unchecked Sendabl
     private var timer: DispatchSourceTimer?
     private var onTick: (@Sendable (Date) -> Void)?
 
-    public init(label: String = "com.monuk7735.mew.notch.kline.tick") {
+    public init(label: String = "io.github.1of1adam.JuneMew.kline.tick") {
         self.queue = DispatchQueue(label: label, qos: .userInitiated)
     }
 
