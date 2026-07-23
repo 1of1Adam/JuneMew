@@ -55,7 +55,9 @@ rm -rf dist/stage/JuneMew.app
 mkdir -p dist/stage
 [ -L dist/stage/Applications ] || ln -s /Applications dist/stage/Applications
 ditto "$APP" dist/stage/JuneMew.app
-hdiutil create -volname "JuneMew ${VERSION}" -srcfolder dist/stage -ov -format UDZO "$DMG" -quiet
+# macOS 26 起 hdiutil create 已不可用（报 No such file or directory），
+# 必须用 diskutil 的新命令。发现于 1.3 发版：脚本静默死在这一步。
+diskutil image create from dist/stage "$DMG" --format UDZO --volumeName "JuneMew ${VERSION}" > /dev/null
 
 # ── 3. ed25519 签名 ──────────────────────────────────────────────────
 # 用导出的私钥文件而不是 Keychain：钥匙串每次读取都会弹授权框等人工

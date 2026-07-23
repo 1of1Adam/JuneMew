@@ -4,21 +4,18 @@
     <title>JuneMew</title>
     <link>https://github.com/1of1Adam/JuneMew</link>
     <item>
-      <title>JuneMew 1.2.1</title>
-      <pubDate>Thu, 23 Jul 2026 08:31:10 +0000</pubDate>
-      <sparkle:version>4</sparkle:version>
-      <sparkle:shortVersionString>1.2.1</sparkle:shortVersionString>
+      <title>JuneMew 1.3</title>
+      <pubDate>Thu, 23 Jul 2026 13:58:56 +0000</pubDate>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>1.3</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>15.2</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        <h2>JuneMew 1.2.1</h2>
-<ul>
-<li>自动更新链路端到端验证版本 —— 如果你在更新弹窗里看到这段文字，说明 Sparkle 更新一切正常 🎉</li>
-</ul>
+        <h3>JuneMew 1.3 —— 经济日历 + 实时快讯</h3><ul><li><b>经济日历</b>：仪表盘内置美国经济数据日历（前值 / 预期 / 实际），下一个数据高亮倒计时，发布后自动补拉实际值，重要度三档筛选</li><li><b>实时快讯</b>：FinancialJuice 快讯秒级推送（WebSocket），critical 红点标记，点击打开原文</li><li><b>中文化</b>：快讯标题与指标名由 DeepSeek 译写成地道中文，悬停可看英文原文；界面全面中文化</li><li><b>交互与动效</b>：点击面板外即可收起；展开级联进场、切周期选中框平滑滑动、新快讯滑入等全套动效打磨</li></ul>
       ]]></description>
       <enclosure
-        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.2.1/JuneMew-1.2.1.zip"
-        sparkle:edSignature="rtBtUeMjx+vVK/Jv8QzA5i8z8jdtLvIdECnStUqe8KYMV3IfaGv6gwnSmMPCIndeK2ygbnRhYd9UmWc5MkM3CA=="
-        length="4964920"
+        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.3/JuneMew-1.3.zip"
+        sparkle:edSignature="4YqveuzGnWX5CkElCGgOP///wCzCBSZjlhwnaHzx/nh82QvIxoYKFKE1gF4iusNR2wW9JNI3ZM8jW4XyCQp6BQ=="
+        length="5204697"
         type="application/octet-stream"/>
     </item>
   </channel>
