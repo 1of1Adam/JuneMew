@@ -7,3 +7,6 @@ dist/
 build/
 KLineCore/.build/
 *.o
+
+# 构建期注入的密钥密文(scripts/gen-secrets.sh 生成),key 永不进 git
+MewNotch/Resources/Secrets/
