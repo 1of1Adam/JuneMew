@@ -199,7 +199,9 @@ final class EconomicCalendarTests: XCTestCase {
         XCTAssertEqual(fromZero!.isLarge, false)
     }
 
-    // MARK: - ET 分组
+    // MARK: - 日界分组
+
+    private static let et = TimeZone(identifier: "America/New_York")!
 
     private func event(id: String, iso: String, importance: EconomicImportance = .medium) -> EconomicEvent {
         EconomicEvent(
@@ -211,16 +213,28 @@ final class EconomicCalendarTests: XCTestCase {
         )
     }
 
-    func testGroupByETDaySplitsAtETMidnight() {
+    func testGroupByDaySplitsAtMidnightOfGivenTimeZone() {
         // UTC 03:00 = ET 前一天 23:00（夏令时 UTC-4）；UTC 05:00 = ET 当天 01:00
         let lateNight = event(id: "a", iso: "2026-07-23T03:00:00Z")   // ET Jul 22 23:00
         let earlyMorning = event(id: "b", iso: "2026-07-23T05:00:00Z") // ET Jul 23 01:00
 
-        let groups = EconomicCalendarFeed.groupByETDay([earlyMorning, lateNight])
+        let groups = EconomicCalendarFeed.groupByDay([earlyMorning, lateNight], in: Self.et)
         XCTAssertEqual(groups.count, 2)
         XCTAssertEqual(groups[0].events.map(\.id), ["a"])
         XCTAssertEqual(groups[1].events.map(\.id), ["b"])
         XCTAssertLessThan(groups[0].dayStart, groups[1].dayStart)
+    }
+
+    func testGroupByDayRespectsTimeZoneParameter() {
+        // 同一对事件：ET 日界下分两天（见上），上海时区（UTC+8）下
+        // 落在同一天 —— 11:00 与 13:00。参数必须真的在起作用。
+        let lateNight = event(id: "a", iso: "2026-07-23T03:00:00Z")
+        let earlyMorning = event(id: "b", iso: "2026-07-23T05:00:00Z")
+
+        let shanghai = TimeZone(identifier: "Asia/Shanghai")!
+        let groups = EconomicCalendarFeed.groupByDay([earlyMorning, lateNight], in: shanghai)
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].events.map(\.id), ["a", "b"])
     }
 
     func testGroupOrdersByTimeThenImportance() {
@@ -229,7 +243,7 @@ final class EconomicCalendarTests: XCTestCase {
         let major = event(id: "major", iso: "2026-07-23T12:30:00Z", importance: .high)
         let later = event(id: "later", iso: "2026-07-23T14:00:00Z", importance: .high)
 
-        let groups = EconomicCalendarFeed.groupByETDay([later, minor, major])
+        let groups = EconomicCalendarFeed.groupByDay([later, minor, major], in: Self.et)
         XCTAssertEqual(groups.count, 1)
         XCTAssertEqual(groups[0].events.map(\.id), ["major", "minor", "later"])
     }

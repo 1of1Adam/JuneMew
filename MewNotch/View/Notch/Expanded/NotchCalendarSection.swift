@@ -9,8 +9,13 @@ import KLineCore
 /// 仪表盘里的经济日历区。
 ///
 /// 回答的问题只有一个：「接下来什么数据会动市场，什么时候」。
-/// 显示从今天（ET 日界）起的前两个有事件的日子 —— 盘中就是今天+明天，
-/// 周末自动落到下周一。
+/// 显示从今天（**本地日界**）起的前两个有事件的日子 —— 盘中就是
+/// 今天+明天，周末自动落到下周一。
+///
+/// 时间与日界全部用用户本地时区：「今天 20:30」就是用户墙上钟的今晚。
+/// 曾经锚在 ET —— 对交易日历语义纯正，但时间列显示的 "08:30" 是
+/// 纽约的早上、用户的深夜，每次都得心算 12 小时时差。ET 时刻仍在
+/// tooltip 里作对照（数据发布的圈内表述习惯用 ET）。
 ///
 /// 视觉语法（与面板设计语言同源）：
 /// - 琥珀 = 「现在」：TODAY 组头、下一个待发布事件的竖条与倒计时、
@@ -251,20 +256,23 @@ struct NotchCalendarSection: View {
         let events: [EconomicEvent]
     }
 
-    /// 筛出「今天（ET）0 点以后 + 达到重要度档位」的事件，按 ET 日分组，
-    /// 取前两个非空日组。今天已发布的保留 —— 「CPI 刚才出了多少」和
-    /// 「下一个是什么」同样是盘中要回答的问题。
+    /// 筛出「今天（本地）0 点以后 + 达到重要度档位」的事件，按本地日
+    /// 分组，取前两个非空日组。今天已发布的保留 —— 「CPI 刚才出了多少」
+    /// 和「下一个是什么」同样是盘中要回答的问题。
     private func displayGroups(feed: EconomicCalendarStore.Feed, now: Date) -> [DisplayGroup] {
-        let todayStart = Self.etCalendar.startOfDay(for: now)
+        let todayStart = Self.localCalendar.startOfDay(for: now)
         let minImportance = defaults.calendarMinImportance
 
         let visible = feed.events.filter {
             $0.importance.rawValue >= minImportance && $0.date >= todayStart
         }
 
-        return EconomicCalendarFeed.groupByETDay(visible).prefix(2).map { group in
+        return EconomicCalendarFeed.groupByDay(
+            visible,
+            in: Self.localCalendar.timeZone
+        ).prefix(2).map { group in
             let isToday = group.dayStart == todayStart
-            let isTomorrow = Self.etCalendar.date(
+            let isTomorrow = Self.localCalendar.date(
                 byAdding: .day, value: 1, to: todayStart
             ) == group.dayStart
 
@@ -290,8 +298,9 @@ struct NotchCalendarSection: View {
             .id
     }
 
-    // MARK: - ET 基建
+    // MARK: - 时区基建
 
+    /// ET 只剩一个用途：tooltip 里的对照时刻（数据发布的圈内表述习惯用 ET）。
     static let etTimeZone: TimeZone = {
         guard let tz = TimeZone(identifier: "America/New_York") else {
             preconditionFailure("America/New_York must exist")
@@ -299,16 +308,15 @@ struct NotchCalendarSection: View {
         return tz
     }()
 
-    private static let etCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = etTimeZone
-        return calendar
-    }()
+    /// 组头、日界、时间列全部锚在这里。autoupdatingCurrent 而不是
+    /// current：系统时区变化（出差、旅行）无需重启即生效 ——
+    /// current 是创建时刻的快照，会让日历永远停在旧时区。
+    private static let localCalendar = Calendar.autoupdatingCurrent
 
     private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "zh_CN")
-        f.timeZone = etTimeZone
+        f.timeZone = .autoupdatingCurrent
         f.dateFormat = "EEE"          // "周一"
         return f
     }()
@@ -316,7 +324,7 @@ struct NotchCalendarSection: View {
     private static let monthDayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "zh_CN")
-        f.timeZone = etTimeZone
+        f.timeZone = .autoupdatingCurrent
         f.dateFormat = "M月d日"
         return f
     }()
@@ -358,7 +366,9 @@ private struct CalendarEventRow: View {
 
     var body: some View {
         HStack(spacing: NotchCalendarSection.columnSpacing) {
-            Text(Self.etTimeFormatter.string(from: event.date))
+            // 本地时刻 —— 与组头的本地日界同一套语义，「20:30」就是
+            // 用户墙上钟的今晚。ET 对照在 tooltip。
+            Text(Self.localTimeFormatter.string(from: event.date))
                 .font(.system(size: 10.5, weight: .medium, design: .rounded).monospacedDigit())
                 .foregroundStyle(
                     isNext ? markerColor : Color.white.opacity(0.55)
@@ -491,8 +501,9 @@ private struct CalendarEventRow: View {
         var headline = event.title
         if !event.period.isEmpty { headline += " — \(event.period)" }
         lines.append(headline)
+        // 行里已是本地 HH:mm，tooltip 补上行里没有的：本地星期几 + ET 对照。
         lines.append(
-            "\(Self.etTimeFormatter.string(from: event.date)) ET · 本地 \(Self.localTimeFormatter.string(from: event.date))"
+            "本地 \(Self.localWeekdayTimeFormatter.string(from: event.date)) · \(Self.etTimeFormatter.string(from: event.date)) ET"
         )
         if let surprise {
             let direction = switch surprise.sign {
@@ -509,17 +520,30 @@ private struct CalendarEventRow: View {
         return lines.joined(separator: "\n")
     }
 
+    /// 时间列：本地 HH:mm。
+    private static let localTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .autoupdatingCurrent
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    /// tooltip：本地星期几 + 时刻（"周四 20:30"）。
+    private static let localWeekdayTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "zh_CN")
+        f.timeZone = .autoupdatingCurrent
+        f.dateFormat = "EEE HH:mm"
+        return f
+    }()
+
+    /// tooltip 的 ET 对照。
     private static let etTimeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = NotchCalendarSection.etTimeZone
         f.dateFormat = "HH:mm"
-        return f
-    }()
-
-    private static let localTimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "EEE HH:mm"
         return f
     }()
 }

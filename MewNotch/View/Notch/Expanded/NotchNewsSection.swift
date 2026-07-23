@@ -198,16 +198,17 @@ private struct NewsRow: View {
     private var tooltip: String {
         var lines = [item.originalTitle]
         if item.isTranslated { lines.append(item.title) }
-        lines.append(Self.timeFormatter.string(from: item.published) + " ET")
+        lines.append("本地 " + Self.timeFormatter.string(from: item.published))
         if !item.url.isEmpty { lines.append("点击打开原文") }
         return lines.joined(separator: "\n")
     }
 
+    /// 发布时刻用本地时区 —— 与日历同一套「我的几点」语义。
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = NotchCalendarSection.etTimeZone
-        f.dateFormat = "HH:mm"
+        f.locale = Locale(identifier: "zh_CN")
+        f.timeZone = .autoupdatingCurrent
+        f.dateFormat = "EEE HH:mm"
         return f
     }()
 }

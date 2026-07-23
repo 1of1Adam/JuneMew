@@ -108,9 +108,9 @@ public struct EconomicSurprise: Equatable, Sendable {
     }
 }
 
-/// 按交易日历时区（ET）切出的一天。
+/// 按给定时区切出的一天。
 public struct EconomicDayGroup: Equatable, Sendable {
-    /// 该天在 ET 的 00:00 时刻。
+    /// 该天在分组时区的 00:00 时刻。
     public let dayStart: Date
     /// 已按时间升序。
     public let events: [EconomicEvent]
@@ -201,15 +201,18 @@ public enum EconomicCalendarFeed {
 
     // MARK: - 分组
 
-    /// 按 ET 日界分组，组内按时间升序，组间按日期升序。
-    /// ET 而不是本地时区：整个 app 的「今天」都锚在交易日历的时区上，
-    /// 一个亚洲用户的凌晨两点属于 ET 的「今天下午」。
-    public static func groupByETDay(_ events: [EconomicEvent]) -> [EconomicDayGroup] {
+    /// 按给定时区的日界分组，组内按时间升序，组间按日期升序。
+    ///
+    /// 时区由调用方决定：UI 层用用户本地时区（「今天 08:30」就是用户
+    /// 墙上钟的今天早上），回测/日志等交易语境可传 ET。曾经写死 ET ——
+    /// 「亚洲用户的凌晨两点属于 ET 的今天下午」对交易日历成立，但对
+    /// 「我几点该在屏幕前」这个问题，用户要的是自己的钟。
+    public static func groupByDay(
+        _ events: [EconomicEvent],
+        in timeZone: TimeZone
+    ) -> [EconomicDayGroup] {
         var calendar = Calendar(identifier: .gregorian)
-        guard let et = TimeZone(identifier: "America/New_York") else {
-            preconditionFailure("America/New_York must exist")
-        }
-        calendar.timeZone = et
+        calendar.timeZone = timeZone
 
         var buckets: [Date: [EconomicEvent]] = [:]
         for event in events {
