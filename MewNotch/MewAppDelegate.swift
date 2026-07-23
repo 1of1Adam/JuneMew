@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 class MewAppDelegate: NSObject, NSApplicationDelegate {
     
@@ -35,6 +36,10 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
 
         // 触发 Sparkle 启动（startingUpdater: true 会开始后台定时检查）。
         _ = UpdaterManager.shared
+
+        // 必须在任何通知可能投递之前挂上，否则点击通知只会激活 app、
+        // 不会进入安装流程。
+        UNUserNotificationCenter.current().delegate = self
 
         timer = .scheduledTimer(
             withTimeInterval: 30,
@@ -97,5 +102,23 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
         timer?.invalidate()
 
         return .terminateNow
+    }
+}
+
+// MARK: - 更新通知点击
+
+extension MewAppDelegate: UNUserNotificationCenterDelegate {
+
+    /// 点击「有新版本」通知 → 直达 Sparkle 安装流程（恢复挂起的会话）。
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        guard response.notification.request.identifier == UpdaterManager.updateNotificationID
+        else { return }
+
+        await MainActor.run {
+            UpdaterManager.shared.checkForUpdates()
+        }
     }
 }

@@ -58,10 +58,18 @@ struct NotchOptionsView: View {
         }
         .keyboardShortcut("R", modifiers: .command)
 
-        Button("Check for Updates…") {
-            updaterManager.checkForUpdates()
+        // 后台已发现新版本时，换成明确的安装入口 —— 「检查」这个动作
+        // 已经完成了，菜单不该还让用户去「检查」。
+        if let version = updaterManager.pendingUpdateVersion {
+            Button("Install Update v\(version)…") {
+                updaterManager.checkForUpdates()
+            }
+        } else {
+            Button("Check for Updates…") {
+                updaterManager.checkForUpdates()
+            }
+            .disabled(!updaterManager.canCheckForUpdates)
         }
-        .disabled(!updaterManager.canCheckForUpdates)
 
         Button("Settings") {
             openSettings()
