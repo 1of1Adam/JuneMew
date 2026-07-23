@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>JuneMew</title>
+    <link>https://github.com/1of1Adam/JuneMew</link>
+    <item>
+      <title>JuneMew 1.2</title>
+      <pubDate>Thu, 23 Jul 2026 07:55:49 +0000</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.2</sparkle:minimumSystemVersion>
+      <description><![CDATA[
+        <h2>JuneMew 1.2</h2>
+<ul>
+<li><b>刘海仪表盘</b>：悬停放大提示，点击展开 —— 全周期倒计时矩阵（点卡片切换主周期）、今日时段、距收盘、时钟状态、声音快捷开关；休市时显示下次开盘时间</li>
+<li><b>自动更新</b>：Sparkle 2 + ed25519 签名，更新不再需要手动过 Gatekeeper</li>
+<li>应用更名 JuneMew（io.github.1of1adam.JuneMew），旧设置自动迁移</li>
+</ul>
+      ]]></description>
+      <enclosure
+        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.2/JuneMew-1.2.zip"
+        sparkle:edSignature="mbUfObTv9I0eF21T/EN5BigccLW3fVUL0oAMhPN1kWrV5RLxgtZe0DFixq7Qo+TsI3RzV0RC9spgsdcXUVEmDQ=="
+        length="4964922"
+        type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>
