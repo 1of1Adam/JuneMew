@@ -92,11 +92,18 @@ struct CountdownView: View {
             // 休市 / 功能关闭：**完全不渲染**，槽位消失，刘海缩回原生轮廓。
             // 不是灰字，不是 opacity(0)。
             return false
-        case .counting:
-            return role == .digits || defaults.showIcon
-        case .fault:
-            // 故障时只画告警字形，图标槽让位 —— 两个符号并排会稀释警示。
-            return role == .digits
+        case .counting, .fault:
+            // **两侧槽位都要占位，哪怕内容是透明的。**
+            //
+            // 左右等宽是「中间的物理挖孔占位居中」的前提：三段
+            // `左槽 | 挖孔占位 | 右槽` 作为整体在屏幕居中，一旦一侧比另一侧宽，
+            // 整条居中后挖孔占位就偏离屏幕中心 (W_宽 - W_窄)/2，而每侧对挖孔
+            // 只留了 8pt 余量（extraNotchPadSize/2）—— 差值一超过 8pt，宽的
+            // 那侧（数字）就被推到物理挖孔上。这正是「数字挡住刘海」的根因。
+            //
+            // 所以图标关掉（showIcon=false）或故障态图标让位时，这一侧仍渲染
+            // 一个与对侧等宽的**透明**槽，纯粹为维持对称、把挖孔占位顶回正中。
+            return true
         }
     }
 
@@ -121,10 +128,17 @@ struct CountdownView: View {
             if role == .digits {
                 countingContent(countdown)
             } else {
-                iconContent()
+                // 用与数字**同一个** widthTemplate 撑出等宽的图标槽（见 hasContent）。
+                iconContent(widthTemplate: countdown.widthTemplate)
             }
         case let .fault(fault):
-            faultContent(fault)
+            if role == .digits {
+                faultContent(fault)
+            } else {
+                // 故障时图标侧不画第二个符号（并排会稀释警示），但仍要撑出与
+                // 告警字形等宽的透明槽，否则告警字形会被挤到物理挖孔上。
+                faultSpacer()
+            }
         case .dormant:
             // hasContent 已保证走不到这里
             EmptyView()
@@ -133,22 +147,37 @@ struct CountdownView: View {
 
     // MARK: - 图标
 
+    /// 图标槽。**宽度锁到与数字侧同一个 widthTemplate**，两侧等宽，中间的
+    /// 物理挖孔占位才会居中、数字才不会越到挖孔上（见 hasContent）。
+    /// 图标叠在槽的挖孔一侧（内侧）—— 与「图标是锚点、贴着挖孔」的原设计一致。
+    private func iconContent(widthTemplate: String) -> some View {
+        Text(widthTemplate)
+            .font(countdownFont)
+            .opacity(0)
+            .overlay(alignment: variant == .left ? .trailing : .leading) {
+                iconGlyph()
+            }
+            .offset(y: baselineNudge)
+    }
+
     @ViewBuilder
-    private func iconContent() -> some View {
-        if alertPlayer.isAlerting {
+    private func iconGlyph() -> some View {
+        if !defaults.showIcon {
+            // 关掉图标：槽仍由上面的 widthTemplate 撑着，只是空的 —— 纯粹为
+            // 维持左右对称，不然关掉图标又会让数字侧偏移压上挖孔。
+            EmptyView()
+        } else if alertPlayer.isAlerting {
             // 正在响铃：图标换成脉动的铃铛，并与刘海整体一起构成「点我停止」。
             //
             // 这里用持续动画是**正当**的，且正是我一直把运动留给报警时刻的目的：
             // 常态下一切静止（数字硬切、图标不动），所以此刻的脉动在余光里
             // 极为醒目，不会被适应屏蔽。
             AlertingBell(font: iconFont)
-                .offset(y: baselineNudge)
         } else {
             Image(systemName: CountdownIcon.systemName)
                 .font(iconFont)
                 // 固定琥珀，不跟随相位 —— 图标是锚点，数字才是信号。
                 .foregroundStyle(MewNotch.CountdownColors.icon)
-                .offset(y: baselineNudge)
         }
     }
 
@@ -206,6 +235,15 @@ struct CountdownView: View {
             .foregroundStyle(MewNotch.CountdownColors.fault)
             .offset(y: baselineNudge)
             .help(fault.userDescription)
+    }
+
+    /// 故障态图标侧的等宽透明占位。用与 `faultContent` 完全相同的字形撑宽，
+    /// 保证左右两槽等宽 —— 挖孔占位居中，告警字形不会被挤到物理挖孔上。
+    private func faultSpacer() -> some View {
+        MewNotch.Assets.icWarning
+            .font(.system(size: fontSize))
+            .opacity(0)
+            .offset(y: baselineNudge)
     }
 
     private func color(for phase: CountdownPhase) -> Color {
