@@ -128,7 +128,7 @@ extension MewAppDelegate: UNUserNotificationCenterDelegate {
         else { return }
 
         await MainActor.run {
-            UpdaterManager.shared.checkForUpdates()
+            UpdaterManager.shared.installPendingOrCheck()
         }
     }
 }

@@ -191,8 +191,9 @@ struct NotchDashboardView: View {
             if let version = updaterManager.pendingUpdateVersion {
                 HoverChip {
                     // 与设置同理：Sparkle 窗口会抢焦点，先收面板。
+                    // 已下载就绪的直接装（重启秒完），未下载的走检查 UI。
                     isExpanded = false
-                    updaterManager.checkForUpdates()
+                    updaterManager.installPendingOrCheck()
                 } content: {
                     HStack(spacing: 5) {
                         Circle()

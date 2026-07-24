@@ -11,6 +11,11 @@
 	<string>82Z+g9c13wWVl5fJKbu8+wBBDEQ3oZEWMvJxznf3/zI=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<!-- 自动下载 + 静默安装(默认开,设置页可关)。安装时机由
+	     UpdaterManager 接管:只在休市/倒计时关闭的安全窗口自动重启,
+	     盘中绝不打断。 -->
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 </dict>

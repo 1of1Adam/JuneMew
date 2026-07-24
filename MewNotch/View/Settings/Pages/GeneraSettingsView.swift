@@ -13,10 +13,13 @@ struct GeneraSettingsView: View {
     @ObservedObject var appDefaults = AppDefaults.shared
     @ObservedObject var updaterManager = UpdaterManager.shared
 
-    /// Sparkle 自己在 defaults 里持久化这个开关，不走本项目的
-    /// `@PrimitiveUserDefault` —— 用本地 @State 镜像它并双向同步。
+    /// Sparkle 自己在 defaults 里持久化这两个开关，不走本项目的
+    /// `@PrimitiveUserDefault` —— 用本地 @State 镜像它们并双向同步。
     @State private var automaticallyChecksForUpdates =
         UpdaterManager.shared.updater.automaticallyChecksForUpdates
+
+    @State private var automaticallyDownloadsUpdates =
+        UpdaterManager.shared.updater.automaticallyDownloadsUpdates
 
     var body: some View {
         Form {
@@ -60,6 +63,24 @@ struct GeneraSettingsView: View {
                             updaterManager.updater.automaticallyChecksForUpdates = newValue
                         }
                     ))
+                }
+
+                if automaticallyChecksForUpdates {
+                    SettingsRow(
+                        title: "Install Automatically",
+                        subtitle: "Download silently and relaunch to finish while the "
+                            + "market is closed — never mid-session.",
+                        icon: MewNotch.Assets.icBoltBadgeAutomatic,
+                        color: MewNotch.Colors.power
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { automaticallyDownloadsUpdates },
+                            set: { newValue in
+                                automaticallyDownloadsUpdates = newValue
+                                updaterManager.updater.automaticallyDownloadsUpdates = newValue
+                            }
+                        ))
+                    }
                 }
 
                 SettingsRow(
