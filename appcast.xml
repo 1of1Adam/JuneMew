@@ -4,18 +4,18 @@
     <title>JuneMew</title>
     <link>https://github.com/1of1Adam/JuneMew</link>
     <item>
-      <title>JuneMew 1.6</title>
-      <pubDate>Fri, 24 Jul 2026 01:31:19 +0000</pubDate>
-      <sparkle:version>8</sparkle:version>
-      <sparkle:shortVersionString>1.6</sparkle:shortVersionString>
+      <title>JuneMew 1.7</title>
+      <pubDate>Fri, 24 Jul 2026 03:18:31 +0000</pubDate>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>1.7</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>15.2</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        <h3>JuneMew 1.6</h3><ul><li><b>全自动更新</b> —— 新版本后台静默下载,并在休市或倒计时关闭的安全窗口自动重启完成安装,盘中绝不打断;从此发版即达,无需任何手动操作</li><li>等待窗口期间,仪表盘保留「新版本已就绪」入口,点击立即安装;设置 → General 可关闭自动安装,回到仅提醒模式</li></ul>
+        修复倒计时数字可能挡住刘海挖孔的问题。
       ]]></description>
       <enclosure
-        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.6/JuneMew-1.6.zip"
-        sparkle:edSignature="DKWUwCl6zpcwQTkMiQRIg8HN8BeTGNMOUXwp1NBICA711PNpcKsefAN18uGa2N5SejhPK/IWPPjiCeKlgWdvCQ=="
-        length="5281096"
+        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.7/JuneMew-1.7.zip"
+        sparkle:edSignature="bxnMR+NcbYff2SrAD4PIu/6gDJcaunJO8ALxQsDnRcL8gW1eXyf/2jwmGyJOVcGZEosnBmNYiRn8R2vadUSADQ=="
+        length="5282923"
         type="application/octet-stream"/>
     </item>
   </channel>
