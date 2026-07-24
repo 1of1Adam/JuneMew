@@ -207,6 +207,23 @@ struct CountdownSettingsView: View {
                         Toggle("", isOn: $defaults.newsTranslationEnabled)
                             .disabled(!NewsStore.translationAvailable)
                     }
+
+                    SettingsRow(
+                        title: "红色快讯推送",
+                        subtitle: "红色级别快讯实时到达时，从刘海弹出通知横幅；"
+                            + "悬停暂停读秒，点击打开原文",
+                        icon: MewNotch.Assets.icNewsFlash,
+                        color: MewNotch.Colors.alert
+                    ) {
+                        HStack(spacing: 10) {
+                            // 预览不受开关限制 —— 先看效果再决定开不开。
+                            Button("预览效果") {
+                                NewsFlashCenter.shared.enqueueDemo()
+                            }
+
+                            Toggle("", isOn: $defaults.newsFlashEnabled)
+                        }
+                    }
                 }
             } header: {
                 Text("快讯")

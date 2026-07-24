@@ -58,6 +58,16 @@ class MewAppDelegate: NSObject, NSApplicationDelegate {
         EconomicCalendarStore.shared.start()
         NewsStore.shared.start()
 
+        // `--news-flash-demo`：启动 3 秒后自动播放红色快讯演示队列。
+        // 开发/验收专用 —— 不用等一条真实的红色新闻才能看到弹幅。
+        if ProcessInfo.processInfo.arguments.contains("--news-flash-demo") {
+            Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { _ in
+                Task { @MainActor in
+                    NewsFlashCenter.shared.enqueueDemo()
+                }
+            }
+        }
+
         NSApp.setActivationPolicy(.accessory)
     }
 

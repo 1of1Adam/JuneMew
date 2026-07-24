@@ -14,6 +14,10 @@ struct NotchView: View {
     @ObservedObject var countdownDefaults = CountdownDefaults.shared
     @ObservedObject var alertPlayer = CandleAlertPlayer.shared
 
+    /// 红色快讯弹幅。变化频率是「每条红色新闻一次」的量级，
+    /// 直接订阅不构成重绘负担（对比：engine 每秒 tick 就不能订）。
+    @ObservedObject var flashCenter = NewsFlashCenter.shared
+
     @StateObject var notchViewModel: NotchViewModel
 
     /// 响铃时鼠标是否悬停在刘海上。只在响铃时有意义 ——
@@ -137,7 +141,7 @@ struct NotchView: View {
                             role: countdownDefaults.position == .left ? .digits : .icon
                         )
 
-                        if isExpanded {
+                        if isExpanded || flashShowing {
                             Spacer(minLength: 0)
                                 .frame(
                                     minWidth: notchViewModel.notchSize.width,
@@ -155,11 +159,13 @@ struct NotchView: View {
                             role: countdownDefaults.position == .right ? .digits : .icon
                         )
                     }
-                    .padding(.horizontal, isExpanded ? 12 : 0)
+                    .padding(.horizontal, (isExpanded || flashShowing) ? 12 : 0)
                     // 展开时顶排必须钉住面板总宽（内容 + 左右 padding）——
                     // 中间是弹性 Spacer，而这棵子树挂在被提议全屏宽度的
                     // 容器里，不钉宽 Spacer 会把整个形体撑成全屏横幅。
-                    .frame(width: isExpanded ? NotchDashboardView.contentWidth + 32 : nil)
+                    // 弹幅态同理钉住弹幅宽：倒计时被推到岛两角，
+                    // 整个形体读成一座一体变形的小岛。
+                    .frame(width: topRowWidth)
 
                     // 点击展开的仪表盘。放在同一个 VStack 里，让黑色形体
                     // 「向下生长」而不是弹出第二个窗口 —— MewPanel 本来就
@@ -172,6 +178,11 @@ struct NotchView: View {
                         // 内容随形体一起落位 —— 面板和黑色形体要读成
                         // 「一体成形」，而不是黑块先到、字再贴上去。
                         .transition(.panelReveal(reduceMotion: reduceMotion))
+                    } else if let flash = flashCenter.current {
+                        // 红色快讯弹幅：与面板互斥（展开优先），同一套
+                        // panelReveal 揭示 —— 通知也是从刘海里长出来的。
+                        NewsFlashBannerView(flash: flash)
+                            .transition(.panelReveal(reduceMotion: reduceMotion))
                     }
                 }
                 // ── 渲染层结构（性能关键，动之前先读懂）──
@@ -206,8 +217,8 @@ struct NotchView: View {
                         // 让「浮起来一点」在余光里成立。
                         .shadow(
                             color: .black.opacity(shadowOpacity),
-                            radius: isExpanded ? 14 : 6,
-                            y: isExpanded ? 5 : 2
+                            radius: isExpanded ? 14 : (flashShowing ? 11 : 6),
+                            y: isExpanded ? 5 : (flashShowing ? 4 : 2)
                         )
                 }
                 // 响铃且悬停时，黑色形体透出一层暖光 —— 明确回答「这里能点吗」。
@@ -319,6 +330,10 @@ struct NotchView: View {
         }
         // 点击面板外的任何地方收起 —— 和系统菜单、弹出框同一条肌肉记忆。
         .onChange(of: isExpanded) { _, expanded in
+            // 快讯弹幅让位/复位。展开屏上弹幅分支已被面板替换（同一
+            // spring 事务），center 里的 collapse 事务服务其余屏幕。
+            flashCenter.setPanelExpanded(expanded)
+
             if expanded {
                 guard outsideClickMonitor == nil else { return }
                 outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
@@ -378,29 +393,50 @@ struct NotchView: View {
 
     // MARK: - 形体几何
 
+    /// 红色快讯弹幅此刻是否可见。展开态优先 —— 面板里本来就有快讯区，
+    /// body 的分支顺序与这里的定义共同保证两个身份绝不同屏。
+    private var flashShowing: Bool {
+        flashCenter.current != nil && !isExpanded
+    }
+
+    /// 顶排钉宽：展开 > 弹幅 > 折叠（自适应）。
+    private var topRowWidth: CGFloat? {
+        if isExpanded { return NotchDashboardView.contentWidth + 32 }
+        if flashShowing { return NewsFlashBannerView.islandWidth }
+        return nil
+    }
+
     /// 展开时上下圆角一起放大：13pt 的折叠圆角贴在 160pt 高的面板上
     /// 看起来近乎直角，是「横幅」而不是「岛」。24pt 是灵动岛的量级。
     /// 圆角随 isExpanded 在同一个 spring 事务里插值（NotchShape 的
     /// animatableData 是上下圆角的 AnimatablePair）。
+    /// 弹幅态取中间档：比折叠大一号（是岛不是横幅），又比面板小一号
+    /// （通知的分量不该压过面板）。
     private var currentTopRadius: CGFloat {
-        isExpanded ? 14 : notchViewModel.cornerRadius.top
+        if isExpanded { return 14 }
+        if flashShowing { return 10 }
+        return notchViewModel.cornerRadius.top
     }
 
     private var currentBottomRadius: CGFloat {
-        isExpanded ? 24 : notchViewModel.cornerRadius.bottom
+        if isExpanded { return 24 }
+        if flashShowing { return 18 }
+        return notchViewModel.cornerRadius.bottom
     }
 
     /// 悬停时形体放大 4.5%；按下压回 0.98 —— 比静止还小一点，
     /// 释放时弹开的行程才清晰。展开后两者都不再生效 ——
     /// 岛已经在最前台了，叠加缩放会让面板文字轻微发虚。
+    /// 弹幅态同理禁用：缩放会让标题文字发虚，且弹幅有自己的悬停反馈。
     private var hoverScale: CGFloat {
-        guard !isExpanded else { return 1.0 }
+        guard !isExpanded, !flashShowing else { return 1.0 }
         if isPressingNotch { return 0.98 }
         return isHoveringNotch ? 1.045 : 1.0
     }
 
     private var shadowOpacity: CGFloat {
         if isExpanded { return 0.55 }
+        if flashShowing { return 0.5 }
         if isHoveringNotch { return 0.35 }
         return 0
     }

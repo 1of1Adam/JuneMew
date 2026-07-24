@@ -90,6 +90,7 @@ class MewNotch {
         // Countdown
         static let icCandle = Image(systemName: "chart.bar.xaxis")
         static let icBell = Image(systemName: "bell.fill")
+        static let icNewsFlash = Image(systemName: "bolt.horizontal.fill")
         static let icPosition = Image(systemName: "arrow.left.and.right")
         static let icMoon = Image(systemName: "moon.zzz.fill")
         static let icLabel = Image(systemName: "textformat")

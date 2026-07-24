@@ -161,6 +161,18 @@ class CountdownDefaults: ObservableObject {
         didSet { self.objectWillChange.send() }
     }
 
+    /// 红色快讯灵动岛推送：红色级别（important/breaking/critical）实时
+    /// 到达时从刘海弹出通知横幅。默认开 —— 每天个位数条、条条会动价，
+    /// 与「运动只留给报警时刻」的克制哲学一致；嫌吵的人关这一个开关
+    /// 不影响面板里的快讯区。
+    @PrimitiveUserDefault(
+        PREFIX + "NewsFlashEnabled",
+        defaultValue: true
+    )
+    var newsFlashEnabled: Bool {
+        didSet { self.objectWillChange.send() }
+    }
+
     @PrimitiveUserDefault(
         PREFIX + "WarningThreshold",
         defaultValue: 60
