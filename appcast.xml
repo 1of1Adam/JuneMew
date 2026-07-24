@@ -4,18 +4,18 @@
     <title>JuneMew</title>
     <link>https://github.com/1of1Adam/JuneMew</link>
     <item>
-      <title>JuneMew 1.4</title>
-      <pubDate>Thu, 23 Jul 2026 23:23:19 +0000</pubDate>
-      <sparkle:version>6</sparkle:version>
-      <sparkle:shortVersionString>1.4</sparkle:shortVersionString>
+      <title>JuneMew 1.5</title>
+      <pubDate>Fri, 24 Jul 2026 00:24:11 +0000</pubDate>
+      <sparkle:version>7</sparkle:version>
+      <sparkle:shortVersionString>1.5</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>15.2</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        <h3>JuneMew 1.4</h3><ul><li><b>动画全量重构</b> —— 展开/收起流畅度大幅提升；新增弹簧手感、按压蓄力与收起吸入，支持系统「减弱动态效果」</li><li><b>经济日历与快讯改用本地时区</b> —— 「今天 20:30」就是你墙上钟的今晚，ET 对照保留在悬停提示</li><li><b>更新提示更贴心</b> —— 后台发现新版本改为系统通知 + 仪表盘安装入口，不再突兀弹窗</li></ul>
+        <h3>JuneMew 1.5</h3><ul><li><b>红色快讯推送</b> —— 红色级别快讯实时到达时,从刘海弹出灵动岛通知横幅:脉冲红点、中文标题,停留数秒自动收回;悬停暂停读秒,点击打开原文</li><li>与收线响铃、仪表盘严格互斥,多条排队逐条弹,重启不重放旧闻;英文先出、DeepSeek 译文到位原位淡换</li><li>设置 → 倒计时 → 快讯可一键关闭,或先点「预览效果」试试手感</li></ul>
       ]]></description>
       <enclosure
-        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.4/JuneMew-1.4.zip"
-        sparkle:edSignature="8EhofuzHKhay98Fa3Fr43VUc16FoOwlXEVshk7gCns281MF8TX13MZwg4r0AlGAeCGvr0+a9Yk7gbriBwOgAAA=="
-        length="5226551"
+        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.5/JuneMew-1.5.zip"
+        sparkle:edSignature="RFpcw6eJHYDiNH6aMdNIhtQ5LRi3FylM+JFOgIsl1WM8/nNeaGciVMgTI/PheLbIheiOfMjdjxc5pYbTn1EMBg=="
+        length="5274610"
         type="application/octet-stream"/>
     </item>
   </channel>
