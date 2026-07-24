@@ -8,6 +8,16 @@
 import SwiftUI
 import OSLog
 
+extension HorizontalAlignment {
+    /// 「物理挖孔占位」的中心。折叠态用它取代默认居中：让挖孔占位对齐屏幕
+    /// 中线,而非让整条内容居中 —— 后者会因数字槽比图标槽宽把挖孔占位挤偏,
+    /// 数字就压到了物理挖孔上。
+    private enum NotchCenter: AlignmentID {
+        static func defaultValue(in d: ViewDimensions) -> CGFloat { d[HorizontalAlignment.center] }
+    }
+    static let notchCenter = HorizontalAlignment(NotchCenter.self)
+}
+
 struct NotchView: View {
 
     @ObservedObject var notchDefaults = NotchDefaults.shared
@@ -119,9 +129,13 @@ struct NotchView: View {
     }
 
     var body: some View {
-        VStack {
-            HStack {
-                Spacer()
+        // 折叠态用自定义对齐把「物理挖孔占位」钉在屏幕正中(见下方 OnlyNotchView
+        // 的 alignmentGuide),而不是让整条内容居中 —— 数字槽比图标槽宽,让整条
+        // 居中会把挖孔占位挤偏、数字压上物理挖孔。Color.clear 撑满全屏,其
+        // notchCenter 落在屏幕中线;ZStack 按 notchCenter 对齐两者,vertical .top 贴顶。
+        // 黑色形体因此保持紧凑不对称(紧贴图标),挖孔却精确居中、内容不越界。
+        ZStack(alignment: Alignment(horizontal: .notchCenter, vertical: .top)) {
+            Color.clear
 
                 VStack(spacing: 0) {
                     // 图标与数字分居刘海两侧：数字在设定的一边，图标在对侧。
@@ -151,6 +165,10 @@ struct NotchView: View {
                             OnlyNotchView(
                                 notchSize: notchViewModel.notchSize
                             )
+                            // 把挖孔占位的中心声明为整棵内容树的 notchCenter,
+                            // 外层 ZStack 据此让它精确对齐屏幕中线 —— 黑色形体
+                            // 紧凑贴住图标,数字与图标各自贴挖孔两侧、都不越界。
+                            .alignmentGuide(.notchCenter) { $0[HorizontalAlignment.center] }
                         }
 
                         CountdownView(
@@ -311,12 +329,8 @@ struct NotchView: View {
                     // 刘海（toggle）、响铃开始、设置里关掉仪表盘。
                 }
                 .help(alertPlayer.isAlerting ? "点击停止响铃" : "")
-
-                Spacer()
-            }
-
-            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .preferredColorScheme(.dark)
         .contextMenu {
             NotchOptionsView()
