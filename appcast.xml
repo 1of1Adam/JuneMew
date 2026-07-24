@@ -4,18 +4,18 @@
     <title>JuneMew</title>
     <link>https://github.com/1of1Adam/JuneMew</link>
     <item>
-      <title>JuneMew 1.7</title>
-      <pubDate>Fri, 24 Jul 2026 03:18:31 +0000</pubDate>
-      <sparkle:version>9</sparkle:version>
-      <sparkle:shortVersionString>1.7</sparkle:shortVersionString>
+      <title>JuneMew 1.8</title>
+      <pubDate>Fri, 24 Jul 2026 03:39:08 +0000</pubDate>
+      <sparkle:version>10</sparkle:version>
+      <sparkle:shortVersionString>1.8</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>15.2</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        修复倒计时数字可能挡住刘海挖孔的问题。
+        修复刘海倒计时数字可能遮挡物理挖孔的问题,图标与数字更贴合挖孔两侧。
       ]]></description>
       <enclosure
-        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.7/JuneMew-1.7.zip"
-        sparkle:edSignature="bxnMR+NcbYff2SrAD4PIu/6gDJcaunJO8ALxQsDnRcL8gW1eXyf/2jwmGyJOVcGZEosnBmNYiRn8R2vadUSADQ=="
-        length="5282923"
+        url="https://github.com/1of1Adam/JuneMew/releases/download/v1.8/JuneMew-1.8.zip"
+        sparkle:edSignature="E4X7BJiKwEEsOac0bnrNMf0l/HIfssFu5csOk+APU2Gpt14Ftqd3qRzgGIvKpC7gEljb8V3DcWzaENgjb8NxAw=="
+        length="5282636"
         type="application/octet-stream"/>
     </item>
   </channel>
